@@ -2,6 +2,8 @@
 
 Bài tập lớn An toàn thông tin: phát hiện hành vi xâm nhập bằng Suricata (IDS) và phản ứng có kiểm soát bằng nftables, đánh giá bằng số liệu trên mạng lab cô lập.
 
+> **Làm nhóm:** thành viên mới xem [docs/THANH-VIEN-bat-dau.md](docs/THANH-VIEN-bat-dau.md) (lấy mã nguồn + import VM + triển khai). Quy trình & phân vai: [docs/NHOM-quy-trinh.md](docs/NHOM-quy-trinh.md).
+
 ## Trạng thái
 
 | Mốc | Nội dung | Trạng thái |

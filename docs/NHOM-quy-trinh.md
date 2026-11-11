@@ -29,6 +29,9 @@ git push -u origin main
 ```
 Mời 3 người còn lại làm **collaborator** trên repo.
 
+> **Thành viên mới bắt đầu từ đâu?** Xem [THANH-VIEN-bat-dau.md](THANH-VIEN-bat-dau.md):
+> cách lấy mã nguồn + import VM + đặt SSH + triển khai phần của mình.
+
 ### 2.2. Mỗi người (sau khi được mời)
 ```bash
 git clone git@github.com:<nhom>/btl-attt.git
