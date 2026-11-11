@@ -1,0 +1,19 @@
+[Unit]
+Description=Lab SOC dashboard (chi mang quan tri 192.168.56.101:9000)
+After=network-online.target lab-analyzer.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+# labresp: doc log, ghi quyet dinh vao /var/lib/lab-analyzer, goi lab-block qua sudo (quyen duy nhat)
+User=labresp
+Group=labresp
+ExecStart=/usr/bin/python3 /usr/local/lib/lab/lab-soc.py
+Restart=on-failure
+RestartSec=3
+ProtectHome=yes
+ProtectSystem=full
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

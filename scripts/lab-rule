@@ -1,0 +1,207 @@
+#!/usr/bin/python3 -I
+"""
+lab-rule - EXECUTOR nap rule tu sinh vao Suricata. Thanh phan DUY NHAT (cung lab-block) duoc chay bang root qua sudoers.
+Cai dat: /usr/local/sbin/lab-rule (root:root 755). Sudoers: labresp duoc chay dung lenh nay.
+
+  lab-rule apply <id>     nap phieu de xuat <id> (vd R5000001) da duoc NGUOI VAN HANH duyet
+  lab-rule revoke <sid>   thu hoi rule tu sinh <sid>
+  lab-rule status         danh sach rule tu sinh dang chay
+
+Nguyen tac an toan:
+  * proposals.json do user khong dac quyen (labresp) ghi -> coi la DU LIEU KHONG TIN CAY.
+    Chi lay 3 truong (kind, content, sid), kiem tra chat (bang trang ky tu, dai SID) va TU DUNG LAI rule
+    tu khuon co dinh. Khong bao gio chep nguyen van ban rule tu file do.
+  * Rule tu sinh chi la "alert" HTTP, nam o file rieng /var/lib/lab-rule/auto.rules (root), dai SID 5000000-5999999.
+  * Kiem tra cu phap (suricata -T) truoc khi ghi; nap nong (reload-rules) va xac nhan khong co rule loi;
+    loi thi khoi phuc ban truoc.
+"""
+import json
+import os
+import re
+import subprocess
+import sys
+import tempfile
+from datetime import datetime, timezone
+
+os.environ["PATH"] = "/usr/sbin:/usr/bin:/sbin:/bin"
+PROPOSALS = "/var/lib/lab-rulegen/proposals.json"
+STATE_DIR = "/var/lib/lab-rule"
+ACTIVE = os.path.join(STATE_DIR, "active.json")
+AUTO_RULES = "/var/lib/lab-rule/auto.rules"      # ngoai /etc: dashboard chay voi ProtectSystem=full (/etc chi doc)
+LOCAL_RULES = "/etc/suricata/rules/local.rules"
+YAML = "/etc/suricata/suricata.yaml"
+SURICATA = "/usr/bin/suricata"
+SURICATASC = "/usr/bin/suricatasc"
+URI_OK = re.compile(r"^/[a-z0-9._~/-]{3,63}$")
+UA_OK = re.compile(r"^[a-z0-9]{4,32}$")
+RANGES = {"uri": (5000000, 5499999), "ua": (5500000, 5999999)}
+MAX_ACTIVE = 200
+
+
+def out(ok, msg, **kw):
+    print(json.dumps({"rc": 0 if ok else 1, "msg": msg, **kw}, ensure_ascii=False))
+    sys.exit(0 if ok else 1)
+
+
+def make_rule(kind, content, sid, anchor=False):
+    if kind == "uri":
+        return (f'alert http any any -> $HOME_NET any (msg:"LAB AUTO uri probe {content}"; '
+                f'flow:established,to_server; http.uri; content:"{content}"; nocase; {"startswith; " if anchor else ""}'
+                f'classtype:web-application-attack; priority:2; '
+                f'metadata:generated_by lab-rulegen, kind uri; sid:{sid}; rev:1;)')
+    return (f'alert http any any -> $HOME_NET any (msg:"LAB AUTO scanner user-agent {content}"; '
+            f'flow:established,to_server; http.user_agent; content:"{content}"; nocase; '
+            f'classtype:web-application-attack; priority:2; '
+            f'metadata:generated_by lab-rulegen, kind ua; sid:{sid}; rev:1;)')
+
+
+def valid(kind, content, sid):
+    if kind not in RANGES or not isinstance(sid, int) or isinstance(sid, bool):
+        return False
+    lo, hi = RANGES[kind]
+    pat = URI_OK if kind == "uri" else UA_OK
+    return lo <= sid <= hi and isinstance(content, str) and bool(pat.match(content))
+
+
+WEBROOT = "/var/www/lab"
+REAL_API = ["/api/health", "/api/products", "/api/cart", "/api/order", "/api/login", "/api/logout", "/api/me"]
+
+
+def clashes_real_path(content):
+    """G4 kiem lai bang quyen root: khong tin ket qua cua phieu (proposals.json co the bi sua)."""
+    paths = set(REAL_API) | {"/"}
+    for root, _d, files in os.walk(WEBROOT):
+        for fn in files:
+            paths.add("/" + os.path.relpath(os.path.join(root, fn), WEBROOT).replace(os.sep, "/").lower())
+    return next((p for p in paths if content in p), None)
+
+
+def load_active():
+    try:
+        with open(ACTIVE, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {"rules": []}
+
+
+def write_atomic(path, text, mode=0o644):
+    d = os.path.dirname(path)
+    fd, tmp = tempfile.mkstemp(dir=d, prefix=".tmp-")
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(text)
+        f.flush()
+        os.fsync(f.fileno())                 # chiu duoc tat may dot ngot
+    os.chmod(tmp, mode)
+    os.replace(tmp, path)
+    dfd = os.open(d, os.O_RDONLY)
+    try:
+        os.fsync(dfd)
+    finally:
+        os.close(dfd)
+
+
+def render(rules):
+    head = "# TU SINH boi lab-rulegen, nap boi lab-rule sau khi nguoi van hanh duyet. KHONG sua tay.\n"
+    return head + "".join(make_rule(r["kind"], r["content"], r["sid"], r.get("anchor") is True) + "\n" for r in rules)
+
+
+def syntax_ok(text):
+    """Kiem tra local.rules + auto.rules moi cung luc."""
+    with tempfile.TemporaryDirectory(prefix="lab-rule-") as td:
+        p = os.path.join(td, "all.rules")
+        with open(LOCAL_RULES, encoding="utf-8") as f:
+            base = f.read()
+        with open(p, "w", encoding="utf-8") as f:
+            f.write(base + "\n" + text)
+        r = subprocess.run([SURICATA, "-T", "-c", YAML, "-S", p, "-l", td, "--set", "unix-command.enabled=no"],
+                           capture_output=True, text=True, timeout=120)
+        return r.returncode == 0, (r.stderr or r.stdout)[-300:]
+
+
+def sc(cmd):
+    r = subprocess.run([SURICATASC, "-c", cmd], capture_output=True, text=True, timeout=120)
+    try:
+        return json.loads(r.stdout.strip().splitlines()[-1])
+    except (ValueError, IndexError):
+        return {"return": "NOK", "message": (r.stdout + r.stderr)[-200:]}
+
+
+def reload_and_verify():
+    r = sc("reload-rules")
+    if r.get("return") != "OK":
+        return False, f"reload-rules: {r.get('message')}"
+    f = sc("ruleset-failed-rules")
+    failed = f.get("message") if f.get("return") == "OK" else None
+    if isinstance(failed, list) and failed:
+        return False, f"co {len(failed)} rule loi sau khi nap"
+    st = sc("ruleset-stats")
+    return True, st.get("message")
+
+
+def apply_rules(new_rules, action_msg, extra):
+    old_text = open(AUTO_RULES, encoding="utf-8").read() if os.path.exists(AUTO_RULES) else ""
+    text = render(new_rules)
+    ok, detail = syntax_ok(text)
+    if not ok:
+        out(False, "G1 (root): suricata -T báo lỗi, không nạp", detail=detail)
+    write_atomic(AUTO_RULES, text)
+    ok, detail = reload_and_verify()
+    if not ok:                                        # khoi phuc ban truoc
+        write_atomic(AUTO_RULES, old_text)
+        sc("reload-rules")
+        out(False, "nạp thất bại, đã khôi phục auto.rules cũ", detail=detail)
+    os.makedirs(STATE_DIR, exist_ok=True)
+    write_atomic(ACTIVE, json.dumps({"rules": new_rules}, ensure_ascii=False, indent=1))
+    out(True, action_msg, ruleset=detail, active=len(new_rules), **extra)
+
+
+def main():
+    a = sys.argv[1:]
+    if a == ["status"]:
+        print(json.dumps({"rc": 0, **load_active()}, ensure_ascii=False))
+        return
+    if len(a) != 2 or a[0] not in ("apply", "revoke"):
+        out(False, "usage: lab-rule apply <R5xxxxxx> | revoke <5xxxxxx> | status")
+    active = load_active().get("rules", [])
+    now = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
+
+    if a[0] == "apply":
+        pid = a[1]
+        if not re.fullmatch(r"R5\d{6}", pid):
+            out(False, "id khong hop le")
+        try:
+            with open(PROPOSALS, encoding="utf-8") as f:
+                props = json.load(f)
+        except (OSError, ValueError):
+            out(False, "khong doc duoc proposals.json")
+        p = next((x for x in props if isinstance(x, dict) and x.get("id") == pid), None)
+        if p is None:
+            out(False, "không tìm thấy phiếu")
+        if p.get("status") != "pending":
+            out(False, f"phiếu không ở trạng thái chờ duyệt ({p.get('status')})")
+        kind, content, sid = p.get("kind"), p.get("content"), p.get("sid")
+        anchor = p.get("anchor") is True and kind == "uri"      # chi nhan dung kieu bool
+        if not valid(kind, content, sid) or pid != f"R{sid}":
+            out(False, "phiếu không qua kiểm tra chặt (kind/content/sid) - từ chối")
+        if kind == "uri" and clashes_real_path(content):
+            out(False, f"G4 (root): '{content}' trùng đường dẫn thật của site ({clashes_real_path(content)}) - từ chối")
+        gates = p.get("gates") or {}
+        if not all((gates.get(k) or {}).get("ok") for k in ("G1", "G2", "G3", "G4", "G5")):
+            out(False, "phiếu chưa đạt đủ 5 cửa kiểm chứng")
+        if any(r["sid"] == sid or (r["kind"] == kind and r["content"] == content) for r in active):
+            out(False, "rule đã đang chạy")
+        if len(active) >= MAX_ACTIVE:
+            out(False, "vuot so rule tu sinh toi da")
+        new = active + [{"sid": sid, "kind": kind, "content": content, "anchor": anchor, "proposal": pid, "approved_at": now}]
+        apply_rules(new, f"đã nạp rule {sid}", {"sid": sid, "rule": make_rule(kind, content, sid, anchor)})
+    else:
+        if not re.fullmatch(r"5\d{6}", a[1]):
+            out(False, "sid khong hop le")
+        sid = int(a[1])
+        if not any(r["sid"] == sid for r in active):
+            out(False, "rule không đang chạy")
+        apply_rules([r for r in active if r["sid"] != sid], f"đã thu hồi rule {sid}", {"sid": sid})
+
+
+if __name__ == "__main__":
+    main()

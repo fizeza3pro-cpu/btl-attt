@@ -1,0 +1,23 @@
+[Unit]
+Description=Lab rulegen - tu sinh rule Suricata tu hanh vi ke tan cong da bi honeypot xac nhan (chi DE XUAT)
+After=suricata.service lab-analyzer.service lab-pcap-ring.service
+
+[Service]
+Type=simple
+# labresp: chi DOC log va GHI phieu de xuat vao /var/lib/lab-rulegen. Khong co quyen nap rule
+# (viec do do /usr/local/sbin/lab-rule lam, sau khi nguoi van hanh duyet tren dashboard).
+User=labresp
+Group=labresp
+ExecStart=/usr/bin/python3 /usr/local/lib/lab/lab-rulegen.py --daemon
+StateDirectory=lab-rulegen
+Restart=on-failure
+RestartSec=10
+Nice=10
+NoNewPrivileges=yes
+ProtectHome=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/lab-rulegen
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

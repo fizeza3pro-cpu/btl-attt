@@ -1,0 +1,20 @@
+== Ca: W11-01
+mo_ta: A thu SQL injection o URL va noi dung dang nhap
+ky_vong: SID 1000013 + 1000015; API tu choi
+== Alert theo SID (khong tinh SID 9xxxxxx)
+      1 1000013 10.77.0.10->10.77.0.20 LAB W SQL injection pattern in URI
+      1 1000015 10.77.0.10->10.77.0.20 LAB W SQL injection pattern in request body
+== Thoi diem alert dau tien moi SID
+1000013 2026-11-10T08:10:31.959712+0700
+1000015 2026-11-10T08:10:31.967145+0700
+== HTTP thay boi Suricata
+      1 10.77.0.10 GET /api/products?q=1%20UNION%20SELECT%20email,password%20FROM%20users -> 200
+      1 10.77.0.10 POST /api/login -> 429
+== Nginx access log
+      1 10.77.0.10 GET /api/products?q=1%20UNION%20SELECT%20email,password%20FROM%20users 200
+      1 10.77.0.10 POST /api/login 429
+== PCAP
+goi: 21
+SYN (khong ACK) tu nguon toi B: 2
+So cong dich khac nhau nhan SYN: 1
+RST/ACK tu B: 0

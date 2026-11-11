@@ -1,0 +1,1 @@
+10.77.0.10 - - [10/Nov/2026:08:10:46 +0700] "GET /?q=%3Cscript%3Ealert(document.cookie)%3C/script%3E HTTP/1.1" 200 3144 "-" "curl/8.20.0"

@@ -1,0 +1,26 @@
+== Ca: M5-APP-02
+mo_ta: Analyzer apply: A quet + vao bay -> chan tu dong
+ky_vong: block_l1; A that bai; C 200; tu phuc hoi sau 60 s
+== Alert theo SID (khong tinh SID 9xxxxxx)
+      3 1000001 10.77.0.10->10.77.0.20 LAB R high TCP connection-attempt rate
+      1 1000002 10.77.0.10->10.77.0.20 LAB W decoy path requested
+      2 1000003 10.77.0.20->10.77.0.10 LAB R many RST/ACK from server - closed ports probed
+      1 1000005 10.77.0.20->10.77.0.10 LAB R RST/ACK from server over 60s - slow port probe
+== Thoi diem alert dau tien moi SID
+1000001 2026-11-08T22:25:03.145234+0700
+1000002 2026-11-08T22:25:10.667404+0700
+1000003 2026-11-08T22:25:03.244918+0700
+1000005 2026-11-08T22:25:03.244918+0700
+== HTTP thay boi Suricata
+      1 10.77.0.10 GET / -> 200
+      1 10.77.0.10 GET /lab-admin -> 403
+      1 10.77.0.30 GET / -> 200
+== Nginx access log
+      1 10.77.0.10 GET / 200
+      1 10.77.0.10 GET /lab-admin 403
+      1 10.77.0.30 GET / 200
+== PCAP
+goi: 462
+SYN (khong ACK) tu nguon toi B: 221
+So cong dich khac nhau nhan SYN: 100
+RST/ACK tu B: 196

@@ -1,0 +1,17 @@
+{
+ "lab-shop": "reel/media/lab-shop.png",
+ "admin-gia": "reel/media/admin-gia.png",
+ "dashboard": "reel/media/dashboard.png",
+ "s-nmap": "reel/media/s-nmap.mp4",
+ "s-canh-bao": "reel/media/s-canh-bao.mp4",
+ "s-robots": "reel/media/s-robots.mp4",
+ "s-admin-login": "reel/media/s-admin-login.mp4",
+ "s-cho-duyet": "reel/media/s-cho-duyet.mp4",
+ "s-do-file": "reel/media/s-do-file.mp4",
+ "s-sqli": "reel/media/s-sqli.mp4",
+ "s-luat-moi": "reel/media/s-luat-moi.mp4",
+ "s-nap-luat": "reel/media/s-nap-luat.mp4",
+ "s-bien-the": "reel/media/s-bien-the.mp4",
+ "s-chan": "reel/media/s-chan.mp4",
+ "s-ket-qua": "reel/media/s-ket-qua.mp4"
+}

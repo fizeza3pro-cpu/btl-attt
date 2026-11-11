@@ -1,0 +1,16 @@
+== Ca: A01-01
+mo_ta: Tham do cong TCP connect 1-100 (nmap -sT, 20 goi/s)
+ky_vong: SID 1000001 (yeu) va 1000003 (cung co); khong 1000002
+== Alert theo SID (khong tinh SID 9xxxxxx)
+      1 1000001 10.77.0.10->10.77.0.20 LAB R high TCP connection-attempt rate
+      1 1000003 10.77.0.20->10.77.0.10 LAB R many RST/ACK from server - closed ports probed
+== Thoi diem alert dau tien moi SID
+1000001 2026-11-08T19:55:28.065312+0700
+1000003 2026-11-08T19:55:28.154454+0700
+== HTTP thay boi Suricata
+== Nginx access log
+== PCAP
+goi: 206
+SYN (khong ACK) tu nguon toi B: 100
+So cong dich khac nhau nhan SYN: 100
+RST/ACK tu B: 98

@@ -1,0 +1,14 @@
+== Ca: N10-01
+mo_ta: C dang nhap dung tai khoan thu nghiem
+ky_vong: 200; khong alert; auth login_ok
+== Alert theo SID (khong tinh SID 9xxxxxx)
+== Thoi diem alert dau tien moi SID
+== HTTP thay boi Suricata
+      1 10.77.0.30 POST /api/login -> 200
+== Nginx access log
+      1 10.77.0.30 POST /api/login 200
+== PCAP
+goi: 9
+SYN (khong ACK) tu nguon toi B: 1
+So cong dich khac nhau nhan SYN: 1
+RST/ACK tu B: 0

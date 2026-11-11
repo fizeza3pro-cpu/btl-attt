@@ -1,0 +1,16 @@
+== Ca: N07-02
+mo_ta: Duong dan hop le va gan giong bay
+ky_vong: Khong 1000002
+== Alert theo SID (khong tinh SID 9xxxxxx)
+== Thoi diem alert dau tien moi SID
+== HTTP thay boi Suricata
+      1 10.77.0.10 GET /about.html -> 200
+      1 10.77.0.10 GET /lab-administrator -> 404
+== Nginx access log
+      1 10.77.0.10 GET /about.html 200
+      1 10.77.0.10 GET /lab-administrator 404
+== PCAP
+goi: 20
+SYN (khong ACK) tu nguon toi B: 2
+So cong dich khac nhau nhan SYN: 1
+RST/ACK tu B: 0

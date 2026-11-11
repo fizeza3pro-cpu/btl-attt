@@ -1,0 +1,31 @@
+== Ca: S01-01
+mo_ta: Kich ban SOC: trinh sat, danh lua, can cau, duyet chan
+ky_vong: deceive sau trinh sat; attacker_engaged khi dung honeytoken; l2 sau khi duyet; C khong bi anh huong
+== Alert theo SID (khong tinh SID 9xxxxxx)
+      1 1000001 10.77.0.10->10.77.0.20 LAB R high TCP connection-attempt rate
+      3 1000002 10.77.0.10->10.77.0.20 LAB W decoy path requested
+      1 1000003 10.77.0.20->10.77.0.10 LAB R many RST/ACK from server - closed ports probed
+      1 1000005 10.77.0.20->10.77.0.10 LAB R RST/ACK from server over 60s - slow port probe
+      3 1000007 10.77.0.20->10.77.0.10 LAB W decoy path served non-403 response
+== Thoi diem alert dau tien moi SID
+1000001 2026-11-10T08:18:10.710018+0700
+1000002 2026-11-10T08:18:19.358714+0700
+1000003 2026-11-10T08:18:10.856832+0700
+1000005 2026-11-10T08:18:10.810099+0700
+1000007 2026-11-10T08:18:19.359179+0700
+== HTTP thay boi Suricata
+      2 10.77.0.10 GET / -> 200
+      1 10.77.0.10 GET /admin -> 200
+      1 10.77.0.10 GET /robots.txt -> 200
+      1 10.77.0.10 POST /admin/login -> 200
+      1 10.77.0.10 POST /admin/login -> 302
+      2 10.77.0.30 GET / -> 200
+      1 10.77.0.30 POST /api/login -> 200
+== Nginx access log
+      2 10.77.0.30 GET / 200
+      1 10.77.0.30 POST /api/login 200
+== PCAP
+goi: 315
+SYN (khong ACK) tu nguon toi B: 110
+So cong dich khac nhau nhan SYN: 100
+RST/ACK tu B: 97

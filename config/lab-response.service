@@ -1,0 +1,14 @@
+[Unit]
+Description=Nap bang nftables inet lab_response cua bai lab
+After=network-pre.target
+Before=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=-/usr/sbin/nft delete table inet lab_response
+ExecStart=/usr/sbin/nft -f /etc/nftables.d/lab-response.nft
+ExecStop=/usr/sbin/nft delete table inet lab_response
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,16 @@
+{"ts": "2026-11-10T08:10:03.272+07:00", "src_ip": "10.77.0.30", "kind": "login_ok", "email": "khach@labshop.vn"}
+{"ts": "2026-11-10T08:10:17.573+07:00", "src_ip": "10.77.0.10", "kind": "login_fail", "email": "khach@labshop.vn"}
+{"ts": "2026-11-10T08:10:17.597+07:00", "src_ip": "10.77.0.10", "kind": "login_fail", "email": "khach@labshop.vn"}
+{"ts": "2026-11-10T08:10:17.620+07:00", "src_ip": "10.77.0.10", "kind": "login_fail", "email": "khach@labshop.vn"}
+{"ts": "2026-11-10T08:10:17.646+07:00", "src_ip": "10.77.0.10", "kind": "login_fail", "email": "khach@labshop.vn"}
+{"ts": "2026-11-10T08:10:17.670+07:00", "src_ip": "10.77.0.10", "kind": "login_fail", "email": "khach@labshop.vn"}
+{"ts": "2026-11-10T08:10:17.679+07:00", "src_ip": "10.77.0.10", "kind": "login_locked", "email": "khach@labshop.vn"}
+{"ts": "2026-11-10T08:10:31.966+07:00", "src_ip": "10.77.0.10", "kind": "login_locked", "email": "a@b.c"}
+{"ts": "2026-11-10T08:11:14.791+07:00", "src_ip": "10.77.0.10", "kind": "login_locked", "email": "x@y.z"}
+{"ts": "2026-11-10T08:11:14.801+07:00", "src_ip": "10.77.0.10", "kind": "login_locked", "email": "x@y.z"}
+{"ts": "2026-11-10T08:11:14.809+07:00", "src_ip": "10.77.0.10", "kind": "login_locked", "email": "x@y.z"}
+{"ts": "2026-11-10T08:11:14.818+07:00", "src_ip": "10.77.0.10", "kind": "login_locked", "email": "x@y.z"}
+{"ts": "2026-11-10T08:11:14.826+07:00", "src_ip": "10.77.0.10", "kind": "login_locked", "email": "x@y.z"}
+{"ts": "2026-11-10T08:11:14.833+07:00", "src_ip": "10.77.0.10", "kind": "login_locked", "email": "x@y.z"}
+{"ts": "2026-11-10T08:18:09.758+07:00", "src_ip": "10.77.0.30", "kind": "login_ok", "email": "khach@labshop.vn"}
+{"ts": "2026-11-10T08:21:06.523+07:00", "src_ip": "10.77.0.10", "kind": "login_invalid_input", "email": "<img src=x onerror=alert(1)>@x.vn"}

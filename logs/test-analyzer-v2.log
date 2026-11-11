@@ -1,0 +1,38 @@
+== EVE that tu cac ca da chay (rule v2 live) ==
+PASS N03-01 web nhe                     ky_vong=log                          thuc_te=log
+PASS N04-01 web don dap                 ky_vong=log                          thuc_te=log
+PASS CN06-01 C 32 ket noi               ky_vong=log                          thuc_te=log
+PASS A01-01 quet cong (20+50)           ky_vong=incident_medium              thuc_te=incident_medium
+PASS A02-01 vao bay                     ky_vong=incident_medium              thuc_te=incident_medium
+PASS A03-01 quet + bay                  ky_vong=recommend_block_l1           thuc_te=recommend_block_l1
+== EVE phat lai voi rule v3 ==
+PASS E01-01 quet cham (v3)              ky_vong=incident_medium              thuc_te=incident_medium
+PASS A03-02 quet + bay (v3)             ky_vong=recommend_block_l1           thuc_te=recommend_block_l1
+== EVE gia lap: tinh huong kho dung trong lab ==
+PASS Gia mao C: 120 diem, toan gia mao duoc ky_vong=incident_high_spoof_suspect  thuc_te=incident_high_spoof_suspect
+PASS Gia mao C (lap lai, khong cong don) ky_vong=incident_high_spoof_suspect  thuc_te=incident_high_spoof_suspect
+PASS A: 120 diem nhung khong tin hieu that ky_vong=incident_high_spoof_suspect  thuc_te=incident_high_spoof_suspect
+PASS Chi tin hieu yeu lap lai           ky_vong=log                          thuc_te=log
+PASS C that su vao bay (dang bao ve)    ky_vong=incident_high_protected      thuc_te=incident_high_protected
+PASS Nguon la 10.77.0.40                ky_vong=recommend_only_out_of_scope  thuc_te=recommend_only_out_of_scope
+PASS IP ngoai mang lab                  ky_vong=log                          thuc_te=log
+PASS Bay tra ma khac 403 (nghiem trong) ky_vong=recommend_block_l1           thuc_te=recommend_block_l1
+PASS Du lieu doc hai + JSON hong        ky_vong=incident_medium              thuc_te=incident_medium
+PASS khong co ky tu dieu khien trong output
+== v2: nhieu nguon, danh lua, ATT&CK (dry-run: executor GIA) ==
+PASS Honeytoken file (truc tiep) -> danh lua ky_vong=deceive                      thuc_te=deceive
+PASS Quet + cham cong bay 3306 -> danh lua ky_vong=deceive                      thuc_te=deceive
+PASS Quet + cong bay, khong dry-run -> chi de xuat ky_vong=recommend_deceive            thuc_te=recommend_deceive
+PASS Bi danh lua roi van can cau -> cho nguoi duyet ky_vong=attacker_engaged             thuc_te=attacker_engaged
+PASS 5 lan dang nhap sai (log ung dung) ky_vong=incident_medium              thuc_te=incident_medium
+PASS Do mat khau den muc bi khoa -> danh lua ky_vong=deceive                      thuc_te=deceive
+PASS 5 lan sai rai rac (> 120 s) -> chi ghi nhan ky_vong=log                          thuc_te=log
+PASS SQLi URL + body (100 diem, tin hieu that) ky_vong=deceive                      thuc_te=deceive
+PASS SQLi, response=block (mac dinh) -> de xuat chan ky_vong=recommend_block_l1           thuc_te=recommend_block_l1
+PASS C dung honeytoken (C duoc bao ve)  ky_vong=incident_high_protected      thuc_te=incident_high_protected
+PASS 1000007 bi bo qua khi dang danh lua
+PASS ATT&CK cua giai doan can cau: T1078,T1110.001
+PASS moi loai hanh vi can cau moi deu thanh incident (2)
+== Che do offline khong bao gio goi executor ==
+PASS --offline --mode apply: firewall khong doi
+== Tong: PASS=32 FAIL=0 ==

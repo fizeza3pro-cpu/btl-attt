@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Đăng nhập — Lab Shop</title>
+  <link rel="stylesheet" href="shop.css">
+</head>
+<body>
+  <div class="topbar"><div class="in"><span>🚚 Miễn phí giao hàng đơn từ 500.000 ₫</span><span>Hotline 1900 0000 · 8:00–22:00</span></div></div>
+  <header><div class="bar">
+    <a class="logo" href="index.html"><span class="mark">⚡</span>LAB<span>SHOP</span></a>
+    <nav><a href="index.html">Sản phẩm</a><a href="about.html">Giới thiệu</a><a class="active" href="login.html">Đăng nhập</a></nav>
+    <div class="search">🔍 Tìm tai nghe, bàn phím…</div>
+    <span class="srv" data-srv>● Đang kiểm tra máy chủ…</span>
+    <a class="cartlink" href="cart.html">🛒 Giỏ hàng<b data-cart-count>0</b></a>
+  </div></header>
+  <main style="max-width:460px">
+    <h2 style="text-align:center">Đăng nhập khách hàng</h2>
+    <div class="panel">
+      <p style="color:#667085;margin-top:0;font-size:14px">Đăng nhập qua API của máy chủ. Sai 5 lần liên tiếp, địa chỉ của bạn bị tạm khóa 5 phút.</p>
+      <div id="login-msg"></div>
+      <form onsubmit="doLogin(event)">
+        <label>Email</label><input id="email" type="email" placeholder="ban@example.com" autocomplete="username">
+        <label>Mật khẩu</label><input id="password" type="password" placeholder="••••••••" autocomplete="current-password">
+        <button class="btn" style="width:100%">Đăng nhập</button>
+      </form>
+    </div>
+  </main>
+  <footer><div class="copy">© 2026 Lab Shop — trang web phục vụ thí nghiệm trong mạng cô lập.</div></footer>
+  <script src="shop.js"></script>
+</body>
+</html>

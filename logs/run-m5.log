@@ -1,0 +1,45 @@
+=== Giai doan 1: MODE=recommend ===
+active
+mode recommend
+2
+lab-admin=403
+Python was not found; run without arguments to install from the Microsoft Store, or disable this shortcut from Settings > Apps > Advanced app settings > App execution aliases.
+  firewall: {"action":"status","blocked_l1":"elements = {}","drop_packets":0}
+  A -> web: 200   C -> web: 200
+      1 1000001 10.77.0.10->10.77.0.20 LAB R high TCP connection-attempt rate
+      1 1000002 10.77.0.10->10.77.0.20 LAB W decoy path requested
+      1 1000003 10.77.0.20->10.77.0.10 LAB R many RST/ACK from server - closed ports probed
+      1 1000005 10.77.0.20->10.77.0.10 LAB R RST/ACK from server over 60s - slow port probe
+
+Cho 125s de cua so tuong quan cua A het han...
+
+=== Giai doan 2: MODE=apply ===
+active
+mode apply
+lab-admin=403
+Python was not found; run without arguments to install from the Microsoft Store, or disable this shortcut from Settings > Apps > Advanced app settings > App execution aliases.
+  firewall: {"action":"status","blocked_l1":"elements = {}","drop_packets":0}
+  A -> web: 200
+      1 1000002 10.77.0.10->10.77.0.20 LAB W decoy path requested
+
+Cho 125s...
+2
+lab-admin=403
+Python was not found; run without arguments to install from the Microsoft Store, or disable this shortcut from Settings > Apps > Advanced app settings > App execution aliases.
+  firewall: {"action":"status","blocked_l1":"elements = { 10.77.0.10 expires 55s818ms }","drop_packets":0}
+  A -> web: 000   C -> web: 200
+  -- Cooldown: A lap lai hanh vi khi dang bi chan --
+1
+Python was not found; run without arguments to install from the Microsoft Store, or disable this shortcut from Settings > Apps > Advanced app settings > App execution aliases.
+  het han truoc: expires 50s597ms | sau: expires 41s146ms (khong duoc gia han)
+  -- Cho het han --
+  A vao lai duoc sau 42 s ke tu luc bat dau cho; firewall: {"action":"status","blocked_l1":"elements = {}","drop_packets":19}
+      3 1000001 10.77.0.10->10.77.0.20 LAB R high TCP connection-attempt rate
+      1 1000002 10.77.0.10->10.77.0.20 LAB W decoy path requested
+      2 1000003 10.77.0.20->10.77.0.10 LAB R many RST/ACK from server - closed ports probed
+      1 1000005 10.77.0.20->10.77.0.10 LAB R RST/ACK from server over 60s - slow port probe
+
+=== Tra analyzer ve MODE=recommend ===
+active
+mode recommend
+XONG M5

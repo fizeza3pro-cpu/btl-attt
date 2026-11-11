@@ -1,0 +1,20 @@
+== Ca: W13-01
+mo_ta: A thu path traversal
+ky_vong: SID 1000006 (+1000008)
+== Alert theo SID (khong tinh SID 9xxxxxx)
+      1 1000006 10.77.0.10->10.77.0.20 LAB W path traversal (raw URI)
+      1 1000008 10.77.0.10->10.77.0.20 LAB W path traversal (encoded)
+== Thoi diem alert dau tien moi SID
+1000006 2026-11-10T08:11:00.510689+0700
+1000008 2026-11-10T08:11:00.517400+0700
+== HTTP thay boi Suricata
+      1 10.77.0.10 GET /%2E%2E/%2E%2E/etc/passwd -> 400
+      1 10.77.0.10 GET /../../etc/passwd -> 400
+== Nginx access log
+      1 10.77.0.10 GET /%2E%2E/%2E%2E/etc/passwd 400
+      1 10.77.0.10 GET /../../etc/passwd 400
+== PCAP
+goi: 21
+SYN (khong ACK) tu nguon toi B: 2
+So cong dich khac nhau nhan SYN: 1
+RST/ACK tu B: 0

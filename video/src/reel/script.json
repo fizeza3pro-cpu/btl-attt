@@ -1,0 +1,366 @@
+{
+ "voice": "vi-VN-NamMinhNeural",
+ "rate": "+0%",
+ "gapLine": 0.35,
+ "gapSection": 0.9,
+ "sections": [
+  {
+   "id": "intro",
+   "label": "MỞ ĐẦU",
+   "tagline": "Máy chủ của bạn có biết mình đang bị tấn công không?",
+   "lines": [
+    {
+     "t": "Một máy chủ web bị quét cổng, bị dò mật khẩu, bị thử SQL injection mỗi ngày.",
+     "say": "Một máy chủ web bị quét cổng, bị dò mật khẩu, bị thử ét kiu eo in giéc sần mỗi ngày."
+    },
+    {
+     "t": "Nhưng nếu không có ai theo dõi, nó sẽ không bao giờ biết."
+    },
+    {
+     "t": "Bài tập lớn này xây dựng một hệ thống giám sát nhỏ, gọi là Mini-SOC, cho một máy chủ web trong mạng lab.",
+     "say": "Bài tập lớn này xây dựng một hệ thống giám sát nhỏ, gọi là Mini sóc, cho một máy chủ web trong mạng lab."
+    },
+    {
+     "t": "Hệ thống phải làm được ba việc: phát hiện, phản ứng, và không làm ảnh hưởng người dùng thật."
+    }
+   ]
+  },
+  {
+   "id": "problem",
+   "label": "VẤN ĐỀ",
+   "tagline": "Phát hiện thôi chưa đủ — phản ứng sai còn nguy hiểm hơn.",
+   "lines": [
+    {
+     "t": "Phát hiện tấn công thì nhiều công cụ làm được. Cái khó là phản ứng thế nào cho đúng."
+    },
+    {
+     "t": "Nếu báo nhầm, ta sẽ chặn nhầm khách hàng thật."
+    },
+    {
+     "t": "Nếu kẻ tấn công giả mạo địa chỉ IP, ta có thể bị lừa chặn một máy vô tội."
+    },
+    {
+     "t": "Vì vậy câu hỏi của bài là: chặn khi nào, chặn ai, và chặn trong bao lâu."
+    }
+   ]
+  },
+  {
+   "id": "lab",
+   "label": "MÔ HÌNH",
+   "tagline": "Ba máy trong một mạng nội bộ, không kết nối Internet.",
+   "lines": [
+    {
+     "t": "Kịch bản sử dụng ba máy trong một mạng nội bộ, hoàn toàn không kết nối Internet."
+    },
+    {
+     "t": "Máy A đóng vai kẻ tấn công, có sẵn các công cụ để dò quét và gửi yêu cầu tấn công vào máy chủ."
+    },
+    {
+     "t": "Máy B là máy chủ, chạy trang web bán hàng cùng toàn bộ hệ thống giám sát, phát hiện và phản ứng."
+    },
+    {
+     "t": "Máy C đóng vai khách hàng thật. Mỗi khi hệ thống chặn ai đó, máy C vẫn phải mua hàng được bình thường."
+    }
+   ]
+  },
+  {
+   "id": "tools",
+   "label": "CÔNG CỤ",
+   "tagline": "Các công cụ được sử dụng.",
+   "lines": [
+    {
+     "t": "Tiếp theo là các công cụ được sử dụng."
+    },
+    {
+     "t": "nmap là công cụ quét cổng. Máy A dùng nó để dò xem máy chủ đang mở những cổng nào, thường là bước đầu tiên của một cuộc tấn công.",
+     "say": "En máp là công cụ quét cổng. Máy A dùng nó để dò xem máy chủ đang mở những cổng nào, thường là bước đầu tiên của một cuộc tấn công."
+    },
+    {
+     "t": "curl dùng để gửi yêu cầu web từ dòng lệnh. Máy A dùng nó để thử các đường dẫn nhạy cảm và gửi các chuỗi tấn công như SQL injection.",
+     "say": "Cơ rồ dùng để gửi yêu cầu web từ dòng lệnh. Máy A dùng nó để thử các đường dẫn nhạy cảm và gửi các chuỗi tấn công như ét kiu eo in giéc sần."
+    },
+    {
+     "t": "Nginx là phần mềm máy chủ web. Trên máy B, nó chạy trang bán hàng và giới hạn số yêu cầu mỗi giây để chống dò quét dồn dập.",
+     "say": "En gin ích là phần mềm máy chủ web. Trên máy B, nó chạy trang bán hàng và giới hạn số yêu cầu mỗi giây để chống dò quét dồn dập."
+    },
+    {
+     "t": "Suricata giống như một camera giám sát mạng. Nó đọc từng gói tin gửi tới máy B, so với các luật, khớp luật nào thì ghi lại một cảnh báo.",
+     "say": "Su ri ca ta giống như một camera giám sát mạng. Nó đọc từng gói tin gửi tới máy B, so với các luật, khớp luật nào thì ghi lại một cảnh báo."
+    },
+    {
+     "t": "nftables là tường lửa của Linux. Hệ thống dùng nó để chặn hoặc chuyển hướng một địa chỉ IP, mỗi lần chặn đều có thời hạn, hết hạn thì tự gỡ.",
+     "say": "En ép tây bồ là tường lửa của Linux. Hệ thống dùng nó để chặn hoặc chuyển hướng một địa chỉ IP, mỗi lần chặn đều có thời hạn, hết hạn thì tự gỡ."
+    },
+    {
+     "t": "systemd giữ cho các chương trình giám sát luôn chạy nền, tự bật lại khi bị lỗi, và chỉ cấp cho mỗi chương trình đúng những quyền nó cần.",
+     "say": "Xít tem đi giữ cho các chương trình giám sát luôn chạy nền, tự bật lại khi bị lỗi, và chỉ cấp cho mỗi chương trình đúng những quyền nó cần."
+    },
+    {
+     "t": "Cuối cùng là MITRE ATT&CK, một bộ từ điển chung để gọi tên các kỹ thuật tấn công, giúp báo cáo sự cố rõ ràng và thống nhất.",
+     "say": "Cuối cùng là Mai tơ Át tắc, một bộ từ điển chung để gọi tên các kỹ thuật tấn công, giúp báo cáo sự cố rõ ràng và thống nhất."
+    }
+   ]
+  },
+  {
+   "id": "parts",
+   "label": "THÀNH PHẦN",
+   "tagline": "Các thành phần được xây dựng trên máy chủ B.",
+   "lines": [
+    {
+     "t": "Trên nền các công cụ đó là các thành phần được xây dựng cho hệ thống."
+    },
+    {
+     "t": "Trang web, Suricata và honeypot ghi lại mọi hoạt động. Bộ phân tích đọc tất cả, rồi quyết định có phản ứng hay không.",
+     "say": "Trang web, Su ri ca ta và hơ ni pót ghi lại mọi hoạt động. Bộ phân tích đọc tất cả, rồi quyết định có phản ứng hay không."
+    },
+    {
+     "t": "Người vận hành theo dõi và ra quyết định cuối cùng trên dashboard. Hãy đi qua từng phần.",
+     "say": "Người vận hành theo dõi và ra quyết định cuối cùng trên đát bọt. Hãy đi qua từng phần."
+    }
+   ]
+  },
+  {
+   "id": "shop",
+   "label": "LAB SHOP & BỘ LUẬT",
+   "tagline": "Mục tiêu cần bảo vệ, và những gì Suricata nhận ra.",
+   "lines": [
+    {
+     "t": "Đầu tiên là Lab Shop, một trang web bán hàng được dựng để mô phỏng cho kịch bản. Đây là mục tiêu mà kẻ tấn công nhắm tới."
+    },
+    {
+     "t": "Tiếp theo là bộ luật cho Suricata. Suricata chỉ là bộ máy, còn hành vi nào bị coi là tấn công thì do luật quyết định.",
+     "say": "Tiếp theo là bộ luật cho Su ri ca ta. Su ri ca ta chỉ là bộ máy, còn hành vi nào bị coi là tấn công thì do luật quyết định."
+    },
+    {
+     "t": "Có mười ba luật viết tay, chia làm ba nhóm: dò quét cổng, tấn công web như SQL injection, XSS hay dò đường dẫn file, và dò mật khẩu.",
+     "say": "Có mười ba luật viết tay, chia làm ba nhóm: dò quét cổng, tấn công web như ét kiu eo in giéc sần, ích ét ét hay dò đường dẫn file, và dò mật khẩu."
+    },
+    {
+     "t": "Mỗi luật có một mức điểm, và được đánh dấu xem tín hiệu đó có thể bị giả mạo địa chỉ hay không."
+    }
+   ]
+  },
+  {
+   "id": "honey",
+   "label": "HONEYPOT",
+   "tagline": "Gài bẫy để lộ mặt kẻ tấn công.",
+   "lines": [
+    {
+     "t": "Tiếp theo là honeypot, tức là những cái bẫy.",
+     "say": "Tiếp theo là hơ ni pót, tức là những cái bẫy."
+    },
+    {
+     "t": "Trong mã nguồn trang web có gài sẵn một tài khoản quản trị giả, một khóa API giả, và file robots.txt để lộ một thư mục sao lưu giả.",
+     "say": "Trong mã nguồn trang web có gài sẵn một tài khoản quản trị giả, một khóa API giả, và file rô bốt chấm tê ích tê để lộ một thư mục sao lưu giả."
+    },
+    {
+     "t": "Ngoài ra còn có các cổng giả như telnet, SSH và MySQL, trả về lời chào giống hệt dịch vụ thật.",
+     "say": "Ngoài ra còn có các cổng giả như tel nét, ét ét hát và mai ét quy eo, trả về lời chào giống hệt dịch vụ thật."
+    },
+    {
+     "t": "Khách hàng thật không bao giờ đụng tới những thứ này, nên ai dùng tới gần như chắc chắn là kẻ tấn công."
+    },
+    {
+     "t": "Khi đủ bằng chứng, kẻ tấn công không bị chặn ngay mà bị chuyển sang một bản sao của trang web. Trang chủ trông y hệt, nhưng trang quản trị là giả, và mọi mật khẩu thử đều được ghi lại."
+    },
+    {
+     "t": "Honeypot còn một vai trò quan trọng nữa: xác nhận chắc chắn ai là kẻ tấn công. Thông tin này được dùng để học thêm luật mới.",
+     "say": "Hơ ni pót còn một vai trò quan trọng nữa: xác nhận chắc chắn ai là kẻ tấn công. Thông tin này được dùng để học thêm luật mới."
+    }
+   ]
+  },
+  {
+   "id": "rulegen",
+   "label": "TỰ SINH LUẬT",
+   "tagline": "Học luật mới từ chính kẻ tấn công.",
+   "lines": [
+    {
+     "t": "Luật viết tay chỉ bắt được những kiểu tấn công đã biết trước. Khi kẻ tấn công dò file cấu hình /.env hay thư mục /.git/, Suricata không hề cảnh báo.",
+     "say": "Luật viết tay chỉ bắt được những kiểu tấn công đã biết trước. Khi kẻ tấn công dò file cấu hình chấm en, hay thư mục chấm gít, Su ri ca ta không hề cảnh báo."
+    },
+    {
+     "t": "Bộ tự sinh luật lấp khoảng trống này. Nó gom các yêu cầu web của kẻ tấn công đã bị honeypot xác nhận, và bỏ qua các trang thật của website.",
+     "say": "Bộ tự sinh luật lấp khoảng trống này. Nó gom các yêu cầu web của kẻ tấn công đã bị hơ ni pót xác nhận, và bỏ qua các trang thật của website."
+    },
+    {
+     "t": "Sau đó nó tìm phần chung của các đường dẫn bị dò. Ví dụ /.env, /.env.bak và /.env.local có chung phần đầu là /.env.",
+     "say": "Sau đó nó tìm phần chung của các đường dẫn bị dò. Ví dụ chấm en, chấm en chấm bác, và chấm en chấm lâu cồ, có chung phần đầu là chấm en."
+    },
+    {
+     "t": "Từ phần chung đó, nó sinh ra một luật Suricata mới theo một khuôn cố định.",
+     "say": "Từ phần chung đó, nó sinh ra một luật Su ri ca ta mới theo một khuôn cố định."
+    },
+    {
+     "t": "Luật mới phải qua năm bước kiểm tra tự động: đúng cú pháp, bắt được đúng các mẫu tấn công, không báo nhầm trên dữ liệu của khách hàng thật, an toàn, và không trùng với luật đã có."
+    },
+    {
+     "t": "Qua đủ năm bước, luật được đưa lên dashboard chờ người vận hành duyệt. Duyệt xong, luật được nạp vào Suricata trong khoảng một giây, không cần dừng giám sát.",
+     "say": "Qua đủ năm bước, luật được đưa lên đát bọt chờ người vận hành duyệt. Duyệt xong, luật được nạp vào Su ri ca ta trong khoảng một giây, không cần dừng giám sát."
+    },
+    {
+     "t": "Từ đó, cả những biến thể chưa từng thấy như /.env.production cũng bị phát hiện, còn trang thật thì không.",
+     "say": "Từ đó, cả những biến thể chưa từng thấy như chấm en chấm prô đắc sần cũng bị phát hiện, còn trang thật thì không."
+    }
+   ]
+  },
+  {
+   "id": "analyzer",
+   "label": "BỘ PHÂN TÍCH",
+   "tagline": "Bộ não của hệ thống: cộng điểm, rồi quyết định.",
+   "lines": [
+    {
+     "t": "Tiếp theo là bộ phân tích, bộ não của hệ thống. Nó đọc cùng lúc cảnh báo của Suricata, log của honeypot và log đăng nhập.",
+     "say": "Tiếp theo là bộ phân tích, bộ não của hệ thống. Nó đọc cùng lúc cảnh báo của Su ri ca ta, log của hơ ni pót và log đăng nhập."
+    },
+    {
+     "t": "Mỗi hành động của một địa chỉ IP được cộng điểm, chỉ tính trong hai phút gần nhất. Hãy xem một ví dụ."
+    },
+    {
+     "t": "Máy A quét cổng dồn dập, được hai mươi điểm. Máy chủ phải trả về rất nhiều gói từ chối, thêm năm mươi điểm."
+    },
+    {
+     "t": "Bảy mươi điểm đủ để ghi thành một sự cố, nhưng chưa phản ứng. Vì kiểu tín hiệu này có thể bị giả mạo địa chỉ, chặn ngay có thể chặn nhầm máy vô tội."
+    },
+    {
+     "t": "Sau đó A kết nối vào cổng bẫy 23, thêm bốn mươi điểm. Kết nối này cần bắt tay đầy đủ, nên không thể giả mạo.",
+     "say": "Sau đó A kết nối vào cổng bẫy hai mươi ba, thêm bốn mươi điểm. Kết nối này cần bắt tay đầy đủ, nên không thể giả mạo."
+    },
+    {
+     "t": "Tổng điểm vượt một trăm và có tín hiệu thật. Hệ thống tự động đánh lừa A, chuyển A sang bản sao của trang web."
+    },
+    {
+     "t": "Nếu A tiếp tục cắn câu, như đăng nhập bằng tài khoản bẫy, sự cố được nâng lên và chờ người vận hành duyệt chặn hoàn toàn."
+    }
+   ]
+  },
+  {
+   "id": "block",
+   "label": "CHẶN",
+   "tagline": "Chặn như thế nào: có thời hạn, quyền tối thiểu.",
+   "lines": [
+    {
+     "t": "Vậy việc chặn diễn ra thế nào? Bộ phân tích chạy bằng một tài khoản thường, không có quyền sửa tường lửa."
+    },
+    {
+     "t": "Nó chỉ được gọi đúng một lệnh chặn. Đây là thành phần duy nhất chạy với quyền quản trị, và chỉ nhận ba thao tác: đánh lừa, chặn web, hoặc chặn toàn bộ."
+    },
+    {
+     "t": "Lệnh chặn đưa địa chỉ IP vào một danh sách của tường lửa, kèm theo thời hạn."
+    },
+    {
+     "t": "Đánh lừa là chuyển cổng web của IP đó sang bản sao trong mười phút. Chặn web kéo dài sáu mươi giây. Chặn toàn bộ là chặn mọi kết nối trong mười phút, và chỉ xảy ra khi người vận hành duyệt."
+    },
+    {
+     "t": "Hết thời hạn, tường lửa tự gỡ, không cần ai nhớ để gỡ. Máy chủ và khách hàng hợp lệ luôn được bảo vệ, không bao giờ bị chặn."
+    },
+    {
+     "t": "Nhờ tách quyền như vậy, kể cả khi bộ phân tích bị chiếm quyền, kẻ tấn công cũng không thể xóa tường lửa hay chặn máy chủ và khách hàng."
+    }
+   ]
+  },
+  {
+   "id": "dash",
+   "label": "DASHBOARD",
+   "tagline": "Nơi người vận hành ra quyết định.",
+   "lines": [
+    {
+     "t": "Cuối cùng là dashboard, giao diện dành cho người vận hành, chỉ mở được từ mạng quản trị.",
+     "say": "Cuối cùng là đát bọt, giao diện dành cho người vận hành, chỉ mở được từ mạng quản trị."
+    },
+    {
+     "t": "Ở đây có danh sách các máy đang hoạt động, luồng cảnh báo theo thời gian thực, và các yêu cầu cần xử lý."
+    },
+    {
+     "t": "Người vận hành bấm duyệt chặn, duyệt luật mới, và xem báo cáo sự cố được sinh tự động."
+    }
+   ]
+  },
+  {
+   "id": "scenario",
+   "label": "KỊCH BẢN",
+   "tagline": "Một cuộc tấn công, từ đầu đến cuối.",
+   "lines": [
+    {
+     "t": "Bây giờ hãy xem toàn bộ hệ thống hoạt động trong một kịch bản."
+    },
+    {
+     "t": "Máy A bắt đầu bằng việc quét cổng máy chủ bằng nmap.",
+     "say": "Máy A bắt đầu bằng việc quét cổng máy chủ bằng en máp.",
+     "hold": 2
+    },
+    {
+     "t": "Bên máy B, Suricata lập tức cảnh báo quét cổng. A còn chạm vào cổng bẫy 23, điểm vượt một trăm, và A bị tự động chuyển sang trang web giả.",
+     "say": "Bên máy B, Su ri ca ta lập tức cảnh báo quét cổng. A còn chạm vào cổng bẫy hai mươi ba, điểm vượt một trăm, và A bị tự động chuyển sang trang web giả.",
+     "hold": 3
+    },
+    {
+     "t": "A không biết mình đã bị đánh lừa. A đọc file robots.txt, thấy đường dẫn tới trang quản trị, rồi xem mã nguồn và tìm được một tài khoản admin.",
+     "say": "A không biết mình đã bị đánh lừa. A đọc file rô bốt chấm tê ích tê, thấy đường dẫn tới trang quản trị, rồi xem mã nguồn và tìm được một tài khoản át min.",
+     "hold": 2
+    },
+    {
+     "t": "A vào trang quản trị, thực chất là trang giả, và đăng nhập bằng tài khoản vừa tìm được.",
+     "hold": 4
+    },
+    {
+     "t": "Đây chính là tài khoản bẫy. Honeypot ghi lại ngay, điểm của A lên 260, và dashboard hiện một yêu cầu chờ duyệt.",
+     "say": "Đây chính là tài khoản bẫy. Hơ ni pót ghi lại ngay, điểm của A lên hai trăm sáu mươi, và đát bọt hiện một yêu cầu chờ duyệt.",
+     "hold": 2
+    },
+    {
+     "t": "A tiếp tục dò các file nhạy cảm như /.env, thư mục /.git/, trang quản trị WordPress, và thử SQL injection.",
+     "say": "A tiếp tục dò các file nhạy cảm như chấm en, thư mục chấm gít, trang quản trị WordPress, và thử ét kiu eo in giéc sần.",
+     "hold": 3
+    },
+    {
+     "t": "SQL injection bị luật có sẵn phát hiện ngay. Còn các đường dẫn như /.env thì chưa có luật nào bắt.",
+     "say": "ét kiu eo in giéc sần bị luật có sẵn phát hiện ngay. Còn các đường dẫn như chấm en thì chưa có luật nào bắt.",
+     "hold": 2
+    },
+    {
+     "t": "Nhưng A đã bị honeypot xác nhận là kẻ tấn công. Bộ tự sinh luật học từ các yêu cầu đó và đề xuất bốn luật mới, cả bốn đều qua đủ năm bước kiểm tra.",
+     "say": "Nhưng A đã bị hơ ni pót xác nhận là kẻ tấn công. Bộ tự sinh luật học từ các yêu cầu đó và đề xuất bốn luật mới, cả bốn đều qua đủ năm bước kiểm tra.",
+     "hold": 1
+    },
+    {
+     "t": "Người vận hành duyệt, Suricata nạp thêm bốn luật, từ mười ba lên mười bảy luật.",
+     "say": "Người vận hành duyệt, Su ri ca ta nạp thêm bốn luật, từ mười ba lên mười bảy luật.",
+     "hold": 4
+    },
+    {
+     "t": "A thử các biến thể mới như /.env.production, và lần này đều bị phát hiện.",
+     "say": "A thử các biến thể mới như chấm en chấm prô đắc sần, và lần này đều bị phát hiện.",
+     "hold": 4
+    },
+    {
+     "t": "Cuối cùng, người vận hành duyệt chặn hoàn toàn. A mất mọi kết nối tới máy chủ trong mười phút.",
+     "hold": 3
+    },
+    {
+     "t": "Trong suốt quá trình đó, máy C vẫn vào web và mua hàng bình thường.",
+     "hold": 4
+    }
+   ]
+  },
+  {
+   "id": "end",
+   "label": "KẾT LUẬN",
+   "tagline": "Một Mini-SOC nhiều lớp, phản ứng có kiểm soát.",
+   "lines": [
+    {
+     "t": "Tóm lại, bài đã xây dựng một Mini-SOC nhiều lớp cho máy chủ web.",
+     "say": "Tóm lại, bài đã xây dựng một Mini sóc nhiều lớp cho máy chủ web."
+    },
+    {
+     "t": "Phát hiện từ nhiều nguồn, gài bẫy để lộ mặt kẻ tấn công, tự học thêm luật mới, và phản ứng có con người duyệt."
+    },
+    {
+     "t": "Mọi lần chặn đều có thời hạn, có bằng chứng, và không ảnh hưởng tới người dùng hợp lệ."
+    },
+    {
+     "t": "Cảm ơn thầy cô và các bạn đã theo dõi."
+    }
+   ]
+  }
+ ]
+}

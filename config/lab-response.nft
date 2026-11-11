@@ -1,0 +1,64 @@
+#!/usr/sbin/nft -f
+# Bang phan ung cua bai lab - chi tac dong card lab enp0s8, khong dung toi ruleset khac.
+# Nap:  nft -f /etc/nftables.d/lab-response.nft      Go: nft delete table inet lab_response (KHONG "flush ruleset")
+#
+# 3 muc phan ung (thao tac qua /usr/local/sbin/lab-block):
+#   l1  blocked_l1   chan TCP/80 toi B              (60 s)
+#   dec deceive_v4   DANH LUA: chuyen 80 -> 8083     (10 phut) - ban sao Lab Shop co trang admin gia (honeypot)
+#   l2  blocked_l2   chan MOI TCP toi B              (10 phut) - dung khi nguoi van hanh duyet
+# IPv6: mang lab chi dung IPv4; TCP/UDP qua IPv6 tren card lab bi chan (rule "lab-ipv6-policy").
+
+table inet lab_response {
+    set never_block {
+        type ipv4_addr
+        elements = { 10.77.0.20 }          # chi may chu (C da bo khoi danh sach nay 11/11/2026)
+    }
+
+    set block_allowed {
+        type ipv4_addr
+        elements = { 10.77.0.10, 10.77.0.30 }
+    }
+
+    set blocked_l1 {
+        type ipv4_addr
+        flags timeout
+        timeout 60s
+    }
+
+    set blocked_l2 {
+        type ipv4_addr
+        flags timeout
+        timeout 10m
+    }
+
+    set deceive_v4 {
+        type ipv4_addr
+        flags timeout
+        timeout 10m
+    }
+
+    # Danh lua: doi cong dich 80 -> 8083 (ban sao honeypot) TRUOC khi routing
+    chain prerouting {
+        type nat hook prerouting priority dstnat; policy accept;
+        iifname != "enp0s8" return
+        ip saddr @never_block return
+        ip saddr != @block_allowed return
+        ip daddr 10.77.0.20 ip saddr @deceive_v4 tcp dport 80 counter redirect to :8083 comment "lab-deceive"
+    }
+
+    chain input {
+        type filter hook input priority -10; policy accept;
+
+        iifname != "enp0s8" return
+
+        # Va lo hong X02 (10/11/2026): mang lab chi dung IPv4, Suricata (HOME_NET IPv4) khong thay IPv6
+        # -> chan moi TCP/UDP qua IPv6 tren card lab (giu ICMPv6 cho neighbor discovery).
+        meta nfproto ipv6 meta l4proto { tcp, udp } counter drop comment "lab-ipv6-policy"
+
+        ip saddr @never_block return
+        ip saddr != @block_allowed return
+
+        ip daddr 10.77.0.20 ip saddr @blocked_l2 meta l4proto tcp counter drop comment "lab-block-l2-all"
+        ip daddr 10.77.0.20 ip saddr @blocked_l1 tcp dport 80 counter drop comment "lab-block-l1-web"
+    }
+}

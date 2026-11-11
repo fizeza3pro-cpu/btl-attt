@@ -1,0 +1,76 @@
+== Ca: CN05-03
+mo_ta: C: tai gallery nhu trinh duyet (6 ket noi song song)
+ky_vong: Khong alert
+== Alert theo SID (khong tinh SID 9xxxxxx)
+== Thoi diem alert dau tien moi SID
+== HTTP thay boi Suricata
+      1 10.77.0.30 GET /gallery.html -> 200
+      1 10.77.0.30 GET /img/img01.svg -> 200
+      1 10.77.0.30 GET /img/img02.svg -> 200
+      1 10.77.0.30 GET /img/img03.svg -> 200
+      1 10.77.0.30 GET /img/img04.svg -> 200
+      1 10.77.0.30 GET /img/img05.svg -> 200
+      1 10.77.0.30 GET /img/img06.svg -> 200
+      1 10.77.0.30 GET /img/img07.svg -> 200
+      1 10.77.0.30 GET /img/img08.svg -> 200
+      1 10.77.0.30 GET /img/img09.svg -> 200
+      1 10.77.0.30 GET /img/img10.svg -> 200
+      1 10.77.0.30 GET /img/img11.svg -> 200
+      1 10.77.0.30 GET /img/img12.svg -> 200
+      1 10.77.0.30 GET /img/img13.svg -> 200
+      1 10.77.0.30 GET /img/img14.svg -> 200
+      1 10.77.0.30 GET /img/img15.svg -> 200
+      1 10.77.0.30 GET /img/img16.svg -> 200
+      1 10.77.0.30 GET /img/img17.svg -> 200
+      1 10.77.0.30 GET /img/img18.svg -> 200
+      1 10.77.0.30 GET /img/img19.svg -> 200
+      1 10.77.0.30 GET /img/img20.svg -> 200
+      1 10.77.0.30 GET /img/img21.svg -> 200
+      1 10.77.0.30 GET /img/img22.svg -> 200
+      1 10.77.0.30 GET /img/img23.svg -> 200
+      1 10.77.0.30 GET /img/img24.svg -> 200
+      1 10.77.0.30 GET /img/img25.svg -> 200
+      1 10.77.0.30 GET /img/img26.svg -> 200
+      1 10.77.0.30 GET /img/img27.svg -> 200
+      1 10.77.0.30 GET /img/img28.svg -> 200
+      1 10.77.0.30 GET /img/img29.svg -> 200
+      1 10.77.0.30 GET /img/img30.svg -> 200
+      1 10.77.0.30 GET /style.css -> 200
+== Nginx access log
+      1 10.77.0.30 GET /gallery.html 200
+      1 10.77.0.30 GET /img/img01.svg 200
+      1 10.77.0.30 GET /img/img02.svg 200
+      1 10.77.0.30 GET /img/img03.svg 200
+      1 10.77.0.30 GET /img/img04.svg 200
+      1 10.77.0.30 GET /img/img05.svg 200
+      1 10.77.0.30 GET /img/img06.svg 200
+      1 10.77.0.30 GET /img/img07.svg 200
+      1 10.77.0.30 GET /img/img08.svg 200
+      1 10.77.0.30 GET /img/img09.svg 200
+      1 10.77.0.30 GET /img/img10.svg 200
+      1 10.77.0.30 GET /img/img11.svg 200
+      1 10.77.0.30 GET /img/img12.svg 200
+      1 10.77.0.30 GET /img/img13.svg 200
+      1 10.77.0.30 GET /img/img14.svg 200
+      1 10.77.0.30 GET /img/img15.svg 200
+      1 10.77.0.30 GET /img/img16.svg 200
+      1 10.77.0.30 GET /img/img17.svg 200
+      1 10.77.0.30 GET /img/img18.svg 200
+      1 10.77.0.30 GET /img/img19.svg 200
+      1 10.77.0.30 GET /img/img20.svg 200
+      1 10.77.0.30 GET /img/img21.svg 200
+      1 10.77.0.30 GET /img/img22.svg 200
+      1 10.77.0.30 GET /img/img23.svg 200
+      1 10.77.0.30 GET /img/img24.svg 200
+      1 10.77.0.30 GET /img/img25.svg 200
+      1 10.77.0.30 GET /img/img26.svg 200
+      1 10.77.0.30 GET /img/img27.svg 200
+      1 10.77.0.30 GET /img/img28.svg 200
+      1 10.77.0.30 GET /img/img29.svg 200
+      1 10.77.0.30 GET /img/img30.svg 200
+      1 10.77.0.30 GET /style.css 200
+== PCAP
+goi: 108
+SYN (khong ACK) tu nguon toi B: 6
+So cong dich khac nhau nhan SYN: 1
+RST/ACK tu B: 0

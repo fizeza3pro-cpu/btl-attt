@@ -1,0 +1,26 @@
+[Unit]
+Description=Analyzer v2 cua bai lab (Suricata + honeypot + auth, ATT&CK, danh lua/chan co gioi han)
+After=suricata.service lab-response.service lab-honeypot.service lab-shop-api.service
+Wants=suricata.service
+
+[Service]
+Type=simple
+User=labresp
+Group=labresp
+# Dat trong /etc/default/lab-analyzer:
+#   MODE=recommend (mac dinh) | apply
+#   RESPONSE=deceive (mac dinh: danh lua truoc, chan hoan toan khi nguoi van hanh duyet) | block (chan web 60 s ngay)
+Environment=MODE=recommend
+Environment=RESPONSE=deceive
+EnvironmentFile=-/etc/default/lab-analyzer
+ExecStart=/usr/bin/python3 /usr/local/lib/lab/analyzer.py --eve /var/log/suricata/eve.json --honeypot /var/log/lab-honeypot/events.jsonl --auth /var/log/lab-shop/auth.jsonl --mode ${MODE} --response ${RESPONSE} --out /var/lib/lab-analyzer/incidents.jsonl
+StateDirectory=lab-analyzer
+Restart=on-failure
+RestartSec=5
+# Gioi han them (khong dung NoNewPrivileges vi analyzer can sudo de goi lab-block)
+ProtectHome=yes
+ProtectSystem=full
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

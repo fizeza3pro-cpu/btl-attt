@@ -1,0 +1,16 @@
+== Ca: E02c-01
+mo_ta: Duong dan moi voi /./
+ky_vong: Doi chieu Suricata va Nginx
+== Alert theo SID (khong tinh SID 9xxxxxx)
+      1 1000002 10.77.0.10->10.77.0.20 LAB W decoy path requested
+== Thoi diem alert dau tien moi SID
+1000002 2026-11-08T21:47:59.909972+0700
+== HTTP thay boi Suricata
+      1 10.77.0.10 GET /./lab-admin -> 403
+== Nginx access log
+      1 10.77.0.10 GET /./lab-admin 403
+== PCAP
+goi: 10
+SYN (khong ACK) tu nguon toi B: 1
+So cong dich khac nhau nhan SYN: 1
+RST/ACK tu B: 0

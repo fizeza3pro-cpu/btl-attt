@@ -1,0 +1,12 @@
+== Ca: CN09-01
+mo_ta: C: khong thao tac 60 s (luu luong nen cua Windows)
+ky_vong: Khong alert
+== Alert theo SID (khong tinh SID 9xxxxxx)
+== Thoi diem alert dau tien moi SID
+== HTTP thay boi Suricata
+== Nginx access log
+== PCAP
+goi: 0
+SYN (khong ACK) tu nguon toi B: 0
+So cong dich khac nhau nhan SYN: 0
+RST/ACK tu B: 0

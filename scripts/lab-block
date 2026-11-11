@@ -1,0 +1,60 @@
+#!/bin/bash
+# Executor cua bai lab: thanh phan DUY NHAT duoc chay voi quyen root (qua sudoers).
+# Chi them/go IP trong cac set cua bang inet lab_response. Cai dat: /usr/local/sbin/lab-block (root:root 755)
+#
+#   lab-block add <l1|l2|dec> <ipv4>   l1 = chan web 60 s | l2 = chan moi TCP 10 phut | dec = danh lua (80 -> honeypot) 10 phut
+#   lab-block del <l1|l2|dec> <ipv4>
+#   lab-block status
+#
+# Nguyen tac an toan: PATH co dinh, nft goi bang duong dan tuyet doi, chi nhan dung tham so mong doi,
+# IP phai dung dinh dang va nam trong ALLOWED, xac nhan lai trang thai thuc te sau moi lenh.
+set -u
+export PATH=/usr/sbin:/usr/bin:/sbin:/bin
+NFT=/usr/sbin/nft
+TABLE="inet lab_response"
+ALLOWED="10.77.0.10 10.77.0.30"   # dong bo voi set block_allowed trong lab-response.nft (C them vao 11/11/2026)
+
+out() { printf '{"action":"%s","level":"%s","ip":"%s","rc":%d,"msg":"%s"}\n' "$1" "$2" "$3" "$4" "$5"; }
+setname() { case "$1" in l1) echo blocked_l1 ;; l2) echo blocked_l2 ;; dec) echo deceive_v4 ;; *) echo "" ;; esac; }
+elems() { $NFT list set $TABLE "$1" 2>/dev/null | grep -o 'elements = {[^}]*}' | sed 's/elements = //' ; }
+count() { $NFT list chain $TABLE "$1" 2>/dev/null | grep "$2" | grep -o 'packets [0-9]*' | awk '{print $2}'; }
+
+action=${1:-}; level=${2:-}; ip=${3:-}
+
+if [ "$action" = "status" ] && [ $# -eq 1 ]; then
+  printf '{"action":"status","blocked_l1":"%s","blocked_l2":"%s","deceive":"%s","drop_packets":%s,"drop_l2_packets":%s,"redirect_packets":%s,"ipv6_drop_packets":%s}\n' \
+    "$(elems blocked_l1)" "$(elems blocked_l2)" "$(elems deceive_v4)" \
+    "$(count input lab-block-l1-web)" "$(count input lab-block-l2-all)" "$(count prerouting lab-deceive)" "$(count input lab-ipv6-policy)" \
+    | sed 's/:,/:0,/g; s/:}/:0}/g'
+  exit 0
+fi
+
+SET=$(setname "$level")
+if [ $# -ne 3 ] || { [ "$action" != "add" ] && [ "$action" != "del" ]; } || [ -z "$SET" ]; then
+  out "${action:0:10}" "${level:0:5}" "" 2 "usage: lab-block add|del l1|l2|dec <ipv4> | status"; exit 2
+fi
+if ! [[ "$ip" =~ ^(25[0-5]|2[0-4][0-9]|1?[0-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1?[0-9]?[0-9])){3}$ ]]; then
+  out "$action" "$level" "" 2 "invalid ipv4"; exit 2
+fi
+ok=0; for a in $ALLOWED; do [ "$ip" = "$a" ] && ok=1; done
+if [ $ok -ne 1 ]; then out "$action" "$level" "$ip" 3 "ip not in ALLOWED - refused"; exit 3; fi
+
+if [ "$action" = "add" ]; then
+  err=$($NFT add element $TABLE "$SET" "{ $ip }" 2>&1); rc=$?
+else
+  err=$($NFT delete element $TABLE "$SET" "{ $ip }" 2>&1); rc=$?
+fi
+err=$(printf '%s' "$err" | tr -d '"\\' | tr '\n' ' ' | cut -c1-160)
+
+# Danh lua dung NAT (redirect 80 -> 8083), ma NAT chi ap dung cho KET NOI MOI. Trinh duyet giu ket noi
+# keep-alive (Lab Shop goi /api/health moi 3 s) se khong bao gio bi chuyen huong. Vi vay khi them/go IP
+# khoi set danh lua, cat cac ket noi TCP dang mo giua IP do va web cua B; trinh duyet tu mo ket noi moi.
+if [ "$level" = "dec" ] && [ $rc -eq 0 ]; then
+  /usr/bin/ss -K -tn dst "$ip" '( sport = :80 or sport = :8083 )' >/dev/null 2>&1 || true
+fi
+
+present=0; ipre=${ip//./\\.}
+$NFT list set $TABLE "$SET" 2>/dev/null | grep -qE "(\{ |, )${ipre}( |,|\})" && present=1
+if [ "$action" = "add" ] && [ $rc -eq 0 ] && [ $present -eq 1 ]; then out add "$level" "$ip" 0 "applied (present in $SET)"; exit 0; fi
+if [ "$action" = "del" ] && [ $rc -eq 0 ] && [ $present -eq 0 ]; then out del "$level" "$ip" 0 "removed from $SET"; exit 0; fi
+out "$action" "$level" "$ip" 1 "nft rc=$rc present=$present $err"; exit 1

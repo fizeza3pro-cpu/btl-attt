@@ -1,0 +1,21 @@
+[Unit]
+Description=Lab Shop API (backend cua trang ban hang trong lab)
+After=network.target
+
+[Service]
+Type=simple
+User=labshop
+Group=labshop
+UMask=0022
+LogsDirectory=lab-shop
+LogsDirectoryMode=0755
+ExecStart=/usr/bin/python3 /usr/local/lib/lab/lab-shop-api.py
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

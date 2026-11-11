@@ -1,0 +1,18 @@
+[Unit]
+Description=Ghi vong (ring buffer) traffic web cua mang lab: 5 x 20 MB, tu ghi de - dung cho kiem chung rule tu sinh va dieu tra
+After=network-online.target lab-nic-offload.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+# tcpdump tu ha quyen xuong user 'tcpdump' sau khi mo card; file 0644 -> labresp doc duoc.
+# AppArmor cua tcpdump cho phep ghi *.pcap<so>.
+ExecStartPre=/usr/bin/install -d -o tcpdump -g tcpdump -m 0755 /var/lib/lab-pcap /var/lib/lab-pcap/prev
+# tcpdump -W luon ghi lai tu ring.pcap0 -> giu vong cu (vd truoc khi may khoi dong lai) trong prev/ de con kiem chung duoc
+ExecStartPre=/bin/sh -c 'rm -f /var/lib/lab-pcap/prev/ring.pcap*; for f in /var/lib/lab-pcap/ring.pcap*; do [ -s "$f" ] && mv -f "$f" /var/lib/lab-pcap/prev/; done; true'
+ExecStart=/usr/bin/tcpdump -i enp0s8 -n -s 0 -U -C 20 -W 5 -w /var/lib/lab-pcap/ring.pcap tcp port 80
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

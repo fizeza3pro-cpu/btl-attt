@@ -1,0 +1,16 @@
+== Ca: X02-before-01
+mo_ta: Lach chan qua IPv6 (before): A bi chan IPv4, thu vao web qua IPv6 link-local
+ky_vong: before: IPv6 lot qua; after: IPv6 bi chan
+== Alert theo SID (khong tinh SID 9xxxxxx)
+== Thoi diem alert dau tien moi SID
+== HTTP thay boi Suricata
+      1 10.77.0.10 GET / -> 200
+      2 fe80:0000:0000:0000:90a5:e916:3d62:d62c GET / -> 200
+== Nginx access log
+      1 10.77.0.10 GET / 200
+      2 fe80::90a5:e916:3d62:d62c GET / 200
+== PCAP
+goi: 46
+SYN (khong ACK) tu nguon toi B: 4
+So cong dich khac nhau nhan SYN: 1
+RST/ACK tu B: 0

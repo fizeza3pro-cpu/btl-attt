@@ -1,0 +1,25 @@
+[Unit]
+Description=Lab Honeypot (trang admin gia, honeytoken, cong bay 23/2222/3306)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=labhoney
+Group=labhoney
+UMask=0022
+LogsDirectory=lab-honeypot
+LogsDirectoryMode=0755
+ExecStart=/usr/bin/python3 /usr/local/lib/lab/lab-honeypot.py
+Restart=on-failure
+RestartSec=3
+# Chi cap quyen mo cong < 1024 (cong 23); khong co quyen nao khac
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

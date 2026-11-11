@@ -1,0 +1,6 @@
+{"ts": "2026-11-10T08:07:03.728+07:00", "src_ip": "10.77.0.10", "kind": "honeypot_admin_view", "path": "/admin", "ua": "curl/8.20.0"}
+{"ts": "2026-11-10T08:07:05.378+07:00", "src_ip": "10.77.0.10", "kind": "honeypot_admin_login", "user": "root", "password": "123456"}
+{"ts": "2026-11-10T08:07:05.546+07:00", "src_ip": "10.77.0.10", "kind": "honeytoken_creds", "user": "admin", "note": "dang nhap bang tai khoan bay"}
+{"ts": "2026-11-10T08:07:05.713+07:00", "src_ip": "10.77.0.10", "kind": "honeytoken_file", "path": "/backup/db-2026-11.sql.gz", "ua": "curl/8.20.0"}
+{"ts": "2026-11-10T08:07:05.878+07:00", "src_ip": "10.77.0.10", "kind": "honeytoken_api_key", "path": "/api/admin/orders"}
+{"ts": "2026-11-10T08:07:09.050+07:00", "src_ip": "10.77.0.10", "kind": "honeyport_connect", "port": "3306", "data": ""}

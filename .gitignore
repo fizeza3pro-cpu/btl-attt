@@ -1,0 +1,33 @@
+# === Nặng, không đưa lên Git ===
+# Video: chỉ giữ MÃ NGUỒN Remotion (video/src). Mọi media render/thô thì bỏ.
+video/out/
+video/raw/
+video/public/
+video/node_modules/
+**/node_modules/
+
+# Media nặng ở bất kỳ đâu
+*.mp4
+*.webm
+*.mkv
+*.mov
+*.wav
+*.mp3
+
+# PCAP và log bắt gói lớn: giữ repo nhẹ
+*.pcap
+evidence/**/.tcpdump.log
+
+# === Rác hệ điều hành / công cụ ===
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+__pycache__/
+*.pyc
+
+# === Cục bộ của từng người, không chia sẻ ===
+*.local
+.env
+deploy.local.conf

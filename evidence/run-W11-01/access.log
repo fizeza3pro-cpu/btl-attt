@@ -1,0 +1,2 @@
+10.77.0.10 - - [10/Nov/2026:08:10:31 +0700] "GET /api/products?q=1%20UNION%20SELECT%20email,password%20FROM%20users HTTP/1.1" 200 1115 "-" "curl/8.20.0"
+10.77.0.10 - - [10/Nov/2026:08:10:31 +0700] "POST /api/login HTTP/1.1" 429 70 "-" "curl/8.20.0"

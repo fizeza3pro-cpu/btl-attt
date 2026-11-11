@@ -1,0 +1,13 @@
+[Unit]
+Description=Tat offload tren card lab enp0s8 de Suricata bat goi chinh xac
+After=sys-subsystem-net-devices-enp0s8.device
+Wants=sys-subsystem-net-devices-enp0s8.device
+Before=suricata.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/ethtool -K enp0s8 gro off tso off gso off
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

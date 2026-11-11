@@ -1,0 +1,12 @@
+== Ca: E01-03
+mo_ta: Tham do cong CHAM 1-20, 1 cong / 1.5 s
+ky_vong: Du kien FN: duoi nguong 10/10 s
+== Alert theo SID (khong tinh SID 9xxxxxx)
+== Thoi diem alert dau tien moi SID
+== HTTP thay boi Suricata
+== Nginx access log
+== PCAP
+goi: 47
+SYN (khong ACK) tu nguon toi B: 21
+So cong dich khac nhau nhan SYN: 20
+RST/ACK tu B: 21

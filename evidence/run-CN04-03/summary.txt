@@ -1,0 +1,16 @@
+== Ca: CN04-03
+mo_ta: C: 30 request lien tuc
+ky_vong: Co the 1000001
+== Alert theo SID (khong tinh SID 9xxxxxx)
+      1 1000001 10.77.0.30->10.77.0.20 LAB R high TCP connection-attempt rate
+== Thoi diem alert dau tien moi SID
+1000001 2026-11-08T20:40:43.538994+0700
+== HTTP thay boi Suricata
+     30 10.77.0.30 GET / -> 200
+== Nginx access log
+     30 10.77.0.30 GET / 200
+== PCAP
+goi: 266
+SYN (khong ACK) tu nguon toi B: 30
+So cong dich khac nhau nhan SYN: 1
+RST/ACK tu B: 0

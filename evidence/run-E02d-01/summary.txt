@@ -1,0 +1,14 @@
+== Ca: E02d-01
+mo_ta: Duong dan moi viet hoa /LAB-ADMIN
+ky_vong: Khong 1000002; Nginx 404 (khong cham bay)
+== Alert theo SID (khong tinh SID 9xxxxxx)
+== Thoi diem alert dau tien moi SID
+== HTTP thay boi Suricata
+      1 10.77.0.10 GET /LAB-ADMIN -> 404
+== Nginx access log
+      1 10.77.0.10 GET /LAB-ADMIN 404
+== PCAP
+goi: 10
+SYN (khong ACK) tu nguon toi B: 1
+So cong dich khac nhau nhan SYN: 1
+RST/ACK tu B: 0

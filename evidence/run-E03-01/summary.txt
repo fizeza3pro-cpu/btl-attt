@@ -1,0 +1,14 @@
+== Ca: E03-01
+mo_ta: Tham do cham 1-25, 1 cong / 3 s (bien the moi)
+ky_vong: 1000005: ~20 RST/60 s, tren nguong 10
+== Alert theo SID (khong tinh SID 9xxxxxx)
+      1 1000005 10.77.0.20->10.77.0.10 LAB R RST/ACK from server over 60s - slow port probe
+== Thoi diem alert dau tien moi SID
+1000005 2026-11-08T22:09:41.416313+0700
+== HTTP thay boi Suricata
+== Nginx access log
+== PCAP
+goi: 68
+SYN (khong ACK) tu nguon toi B: 27
+So cong dich khac nhau nhan SYN: 25
+RST/ACK tu B: 26

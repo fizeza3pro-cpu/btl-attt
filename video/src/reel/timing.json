@@ -1,0 +1,294 @@
+{
+ "intro-0": {
+  "hash": "4c1208eb4cce",
+  "dur": 6.216
+ },
+ "intro-1": {
+  "hash": "bb4a111dacf1",
+  "dur": 4.056
+ },
+ "intro-2": {
+  "hash": "4f54f68ed078",
+  "dur": 6.768
+ },
+ "intro-3": {
+  "hash": "6e98fc3fab5a",
+  "dur": 5.904
+ },
+ "problem-0": {
+  "hash": "c379ac8e343e",
+  "dur": 6.12
+ },
+ "problem-1": {
+  "hash": "864db3e4fe1c",
+  "dur": 3.72
+ },
+ "problem-2": {
+  "hash": "343df247cc9b",
+  "dur": 5.688
+ },
+ "problem-3": {
+  "hash": "ac4ae403c4b9",
+  "dur": 5.64
+ },
+ "lab-0": {
+  "hash": "0cdb8a991bfe",
+  "dur": 5.256
+ },
+ "lab-1": {
+  "hash": "98b039e45ad6",
+  "dur": 6.504
+ },
+ "lab-2": {
+  "hash": "1ebad6e6e327",
+  "dur": 6.528
+ },
+ "lab-3": {
+  "hash": "79e1e50dd685",
+  "dur": 7.488
+ },
+ "tools-0": {
+  "hash": "7a0cec360104",
+  "dur": 3.024
+ },
+ "tools-1": {
+  "hash": "c316e12ae204",
+  "dur": 8.928
+ },
+ "tools-2": {
+  "hash": "bf2ec44b7c3d",
+  "dur": 9.72
+ },
+ "tools-3": {
+  "hash": "aef07affab2b",
+  "dur": 8.928
+ },
+ "tools-4": {
+  "hash": "2257a58ff8ba",
+  "dur": 9.912
+ },
+ "tools-5": {
+  "hash": "43220e84ad8c",
+  "dur": 9.912
+ },
+ "tools-6": {
+  "hash": "8c940a569de3",
+  "dur": 7.944
+ },
+ "tools-7": {
+  "hash": "b0f0b6c9f130",
+  "dur": 7.632
+ },
+ "parts-0": {
+  "hash": "26e1be73840a",
+  "dur": 4.368
+ },
+ "parts-1": {
+  "hash": "4b87be19cd1d",
+  "dur": 8.712
+ },
+ "parts-2": {
+  "hash": "f58d779fd09a",
+  "dur": 6.12
+ },
+ "shop-0": {
+  "hash": "ef9994c4d30c",
+  "dur": 8.304
+ },
+ "shop-1": {
+  "hash": "27d31af69f9b",
+  "dur": 8.568
+ },
+ "shop-2": {
+  "hash": "de1b919a2451",
+  "dur": 10.032
+ },
+ "shop-3": {
+  "hash": "e3b88d34d3b6",
+  "dur": 6.048
+ },
+ "honey-0": {
+  "hash": "15cac59bf1de",
+  "dur": 3.84
+ },
+ "honey-1": {
+  "hash": "e9fd077c1b8d",
+  "dur": 9.264
+ },
+ "honey-2": {
+  "hash": "ed25c10de11a",
+  "dur": 6.864
+ },
+ "honey-3": {
+  "hash": "31953ffbeb03",
+  "dur": 5.88
+ },
+ "honey-4": {
+  "hash": "cb6e794ae472",
+  "dur": 11.592
+ },
+ "honey-5": {
+  "hash": "89cd5597b125",
+  "dur": 8.496
+ },
+ "rulegen-0": {
+  "hash": "2ac3e9d3e04d",
+  "dur": 9.912
+ },
+ "rulegen-1": {
+  "hash": "504560d791bb",
+  "dur": 9.552
+ },
+ "rulegen-2": {
+  "hash": "e08409c380b2",
+  "dur": 9.984
+ },
+ "rulegen-3": {
+  "hash": "44850f5a97c2",
+  "dur": 5.136
+ },
+ "rulegen-4": {
+  "hash": "bb757e475468",
+  "dur": 10.344
+ },
+ "rulegen-5": {
+  "hash": "c4a1709b45cd",
+  "dur": 9.888
+ },
+ "rulegen-6": {
+  "hash": "cba2a72d4b3e",
+  "dur": 6.912
+ },
+ "analyzer-0": {
+  "hash": "1787f7a9be00",
+  "dur": 9.312
+ },
+ "analyzer-1": {
+  "hash": "8aa2776ae8c4",
+  "dur": 7.584
+ },
+ "analyzer-2": {
+  "hash": "f15b10c10ab9",
+  "dur": 8.304
+ },
+ "analyzer-3": {
+  "hash": "c7aa867bb328",
+  "dur": 9.84
+ },
+ "analyzer-4": {
+  "hash": "141de23d8835",
+  "dur": 8.784
+ },
+ "analyzer-5": {
+  "hash": "7ef7ad0445b9",
+  "dur": 7.68
+ },
+ "analyzer-6": {
+  "hash": "a2ccb33b1007",
+  "dur": 7.608
+ },
+ "block-0": {
+  "hash": "07d8e3b2bd47",
+  "dur": 7.056
+ },
+ "block-1": {
+  "hash": "55058c0a4e0e",
+  "dur": 10.488
+ },
+ "block-2": {
+  "hash": "a868eec5734e",
+  "dur": 5.112
+ },
+ "block-3": {
+  "hash": "564bf909a842",
+  "dur": 12.552
+ },
+ "block-4": {
+  "hash": "b9c4adb02941",
+  "dur": 9.48
+ },
+ "block-5": {
+  "hash": "4486ba0a3142",
+  "dur": 7.68
+ },
+ "dash-0": {
+  "hash": "22bb93750789",
+  "dur": 5.568
+ },
+ "dash-1": {
+  "hash": "1218a18f27e8",
+  "dur": 6.384
+ },
+ "dash-2": {
+  "hash": "ef4a465f1a53",
+  "dur": 5.976
+ },
+ "scenario-0": {
+  "hash": "a94ade774b1a",
+  "dur": 4.056
+ },
+ "scenario-1": {
+  "hash": "bc67ca405007",
+  "dur": 3.864
+ },
+ "scenario-2": {
+  "hash": "3b1a0be6410e",
+  "dur": 10.896
+ },
+ "scenario-3": {
+  "hash": "3156008c96a8",
+  "dur": 10.128
+ },
+ "scenario-4": {
+  "hash": "0d93cdedc981",
+  "dur": 5.76
+ },
+ "scenario-5": {
+  "hash": "03860bf34850",
+  "dur": 8.976
+ },
+ "scenario-6": {
+  "hash": "31da49d491b2",
+  "dur": 7.824
+ },
+ "scenario-7": {
+  "hash": "5046c53cdb0c",
+  "dur": 7.728
+ },
+ "scenario-8": {
+  "hash": "ab3056ff4a71",
+  "dur": 10.128
+ },
+ "scenario-9": {
+  "hash": "11bf6facfc1d",
+  "dur": 5.544
+ },
+ "scenario-10": {
+  "hash": "801a1610ef8a",
+  "dur": 5.592
+ },
+ "scenario-11": {
+  "hash": "c5f784315c84",
+  "dur": 6.744
+ },
+ "scenario-12": {
+  "hash": "ac9de652091a",
+  "dur": 4.632
+ },
+ "end-0": {
+  "hash": "1fb99ec02f67",
+  "dur": 4.656
+ },
+ "end-1": {
+  "hash": "d5e246933287",
+  "dur": 7.152
+ },
+ "end-2": {
+  "hash": "ba2fb56e3b6b",
+  "dur": 5.736
+ },
+ "end-3": {
+  "hash": "d40816f364db",
+  "dur": 3.072
+ }
+}

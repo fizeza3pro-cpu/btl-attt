@@ -1,0 +1,16 @@
+== Ca: W12-01
+mo_ta: A thu XSS o URL
+ky_vong: SID 1000014
+== Alert theo SID (khong tinh SID 9xxxxxx)
+      1 1000014 10.77.0.10->10.77.0.20 LAB W XSS pattern in URI
+== Thoi diem alert dau tien moi SID
+1000014 2026-11-10T08:10:46.210901+0700
+== HTTP thay boi Suricata
+      1 10.77.0.10 GET /?q=%3Cscript%3Ealert(document.cookie)%3C/script%3E -> 200
+== Nginx access log
+      1 10.77.0.10 GET /?q=%3Cscript%3Ealert(document.cookie)%3C/script%3E 200
+== PCAP
+goi: 13
+SYN (khong ACK) tu nguon toi B: 1
+So cong dich khac nhau nhan SYN: 1
+RST/ACK tu B: 0

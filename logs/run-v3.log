@@ -1,0 +1,18 @@
+
+######## E03-01 [attack] ########
+22/tcp open   ssh
+Nmap done: 1 IP address (1 host up) scanned in 81.07 seconds
+      1 1000005 10.77.0.20->10.77.0.10 LAB R RST/ACK from server over 60s - slow port probe
+
+######## E04-01 [attack] ########
+Nmap done: 1 IP address (1 host up) scanned in 104.12 seconds
+
+######## N04-06 [normal] ########
+200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 
+      1 1000001 10.77.0.10->10.77.0.20 LAB R high TCP connection-attempt rate
+
+######## CN06-04 [normal] ########
+browse parallel=32: 32 tai nguyen, ma: 200x32, ket noi TCP moi: 31
+      1 1000001 10.77.0.30->10.77.0.20 LAB R high TCP connection-attempt rate
+
+XONG phan: v3

@@ -1,0 +1,170 @@
+
+######## N03-02 [normal] ########
+200 200 200 200 200 200 200 200 200 200 
+
+######## N04-02 [normal] ########
+200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 
+      1 1000001 10.77.0.10->10.77.0.20 LAB R high TCP connection-attempt rate
+
+######## N07-02 [normal] ########
+200 404
+
+######## A01-02 [attack] ########
+22/tcp open  ssh
+80/tcp open  http
+Nmap done: 1 IP address (1 host up) scanned in 5.04 seconds
+      1 1000001 10.77.0.10->10.77.0.20 LAB R high TCP connection-attempt rate
+      1 1000003 10.77.0.20->10.77.0.10 LAB R many RST/ACK from server - closed ports probed
+
+######## A02-02 [attack] ########
+lab-admin=403
+      1 1000002 10.77.0.10->10.77.0.20 LAB W decoy path requested
+
+######## A03-02 [attack] ########
+22/tcp open  ssh
+80/tcp open  http
+Nmap done: 1 IP address (1 host up) scanned in 5.00 seconds
+lab-admin=403
+      1 1000001 10.77.0.10->10.77.0.20 LAB R high TCP connection-attempt rate
+      1 1000002 10.77.0.10->10.77.0.20 LAB W decoy path requested
+      1 1000003 10.77.0.20->10.77.0.10 LAB R many RST/ACK from server - closed ports probed
+
+######## N03-03 [normal] ########
+200 200 200 200 200 200 200 200 200 200 
+
+######## N04-03 [normal] ########
+200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 
+      1 1000001 10.77.0.10->10.77.0.20 LAB R high TCP connection-attempt rate
+
+######## N07-03 [normal] ########
+200 404
+
+######## A01-03 [attack] ########
+22/tcp open  ssh
+80/tcp open  http
+Nmap done: 1 IP address (1 host up) scanned in 5.03 seconds
+      1 1000001 10.77.0.10->10.77.0.20 LAB R high TCP connection-attempt rate
+      1 1000003 10.77.0.20->10.77.0.10 LAB R many RST/ACK from server - closed ports probed
+
+######## A02-03 [attack] ########
+lab-admin=403
+      1 1000002 10.77.0.10->10.77.0.20 LAB W decoy path requested
+
+######## A03-03 [attack] ########
+22/tcp open  ssh
+80/tcp open  http
+Nmap done: 1 IP address (1 host up) scanned in 5.00 seconds
+lab-admin=403
+      1 1000001 10.77.0.10->10.77.0.20 LAB R high TCP connection-attempt rate
+      1 1000002 10.77.0.10->10.77.0.20 LAB W decoy path requested
+      1 1000003 10.77.0.20->10.77.0.10 LAB R many RST/ACK from server - closed ports probed
+
+######## N03-04 [normal] ########
+200 200 200 200 200 200 200 200 200 200 
+
+######## N04-04 [normal] ########
+200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 
+      1 1000001 10.77.0.10->10.77.0.20 LAB R high TCP connection-attempt rate
+
+######## N07-04 [normal] ########
+200 404
+
+######## A01-04 [attack] ########
+22/tcp open  ssh
+80/tcp open  http
+Nmap done: 1 IP address (1 host up) scanned in 5.05 seconds
+      1 1000001 10.77.0.10->10.77.0.20 LAB R high TCP connection-attempt rate
+      1 1000003 10.77.0.20->10.77.0.10 LAB R many RST/ACK from server - closed ports probed
+
+######## A02-04 [attack] ########
+lab-admin=403
+      1 1000002 10.77.0.10->10.77.0.20 LAB W decoy path requested
+
+######## A03-04 [attack] ########
+22/tcp open  ssh
+80/tcp open  http
+Nmap done: 1 IP address (1 host up) scanned in 5.02 seconds
+lab-admin=403
+      1 1000001 10.77.0.10->10.77.0.20 LAB R high TCP connection-attempt rate
+      1 1000002 10.77.0.10->10.77.0.20 LAB W decoy path requested
+      1 1000003 10.77.0.20->10.77.0.10 LAB R many RST/ACK from server - closed ports probed
+
+######## N03-05 [normal] ########
+200 200 200 200 200 200 200 200 200 200 
+
+######## N04-05 [normal] ########
+200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 
+      1 1000001 10.77.0.10->10.77.0.20 LAB R high TCP connection-attempt rate
+
+######## N07-05 [normal] ########
+200 404
+
+######## A01-05 [attack] ########
+22/tcp open  ssh
+80/tcp open  http
+Nmap done: 1 IP address (1 host up) scanned in 5.04 seconds
+      1 1000001 10.77.0.10->10.77.0.20 LAB R high TCP connection-attempt rate
+      1 1000003 10.77.0.20->10.77.0.10 LAB R many RST/ACK from server - closed ports probed
+
+######## A02-05 [attack] ########
+lab-admin=403
+      1 1000002 10.77.0.10->10.77.0.20 LAB W decoy path requested
+
+######## A03-05 [attack] ########
+22/tcp open  ssh
+80/tcp open  http
+Nmap done: 1 IP address (1 host up) scanned in 5.01 seconds
+lab-admin=403
+      1 1000001 10.77.0.10->10.77.0.20 LAB R high TCP connection-attempt rate
+      1 1000002 10.77.0.10->10.77.0.20 LAB W decoy path requested
+      1 1000003 10.77.0.20->10.77.0.10 LAB R many RST/ACK from server - closed ports probed
+
+######## CN01-01 [normal] ########
+light: 200 200 200 200 200 200 200 200 200 200
+
+######## CN04-01 [normal] ########
+burst: 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200
+      1 1000001 10.77.0.30->10.77.0.20 LAB R high TCP connection-attempt rate
+
+######## CN05-01 [normal] ########
+browse parallel=6: 32 tai nguyen, ma: 200x32, ket noi TCP moi: 6
+
+######## CN06-01 [normal] ########
+browse parallel=32: 32 tai nguyen, ma: 200x32, ket noi TCP moi: 31
+      1 1000001 10.77.0.30->10.77.0.20 LAB R high TCP connection-attempt rate
+
+######## CN09-01 [normal] ########
+idle 60s
+
+######## CN01-02 [normal] ########
+light: 200 200 200 200 200 200 200 200 200 200
+
+######## CN04-02 [normal] ########
+burst: 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200
+      1 1000001 10.77.0.30->10.77.0.20 LAB R high TCP connection-attempt rate
+
+######## CN05-02 [normal] ########
+browse parallel=6: 32 tai nguyen, ma: 200x32, ket noi TCP moi: 6
+
+######## CN06-02 [normal] ########
+browse parallel=32: 32 tai nguyen, ma: 200x32, ket noi TCP moi: 31
+      1 1000001 10.77.0.30->10.77.0.20 LAB R high TCP connection-attempt rate
+
+######## CN09-02 [normal] ########
+idle 60s
+
+######## CN01-03 [normal] ########
+light: 200 200 200 200 200 200 200 200 200 200
+
+######## CN04-03 [normal] ########
+burst: 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200 200
+      1 1000001 10.77.0.30->10.77.0.20 LAB R high TCP connection-attempt rate
+
+######## CN05-03 [normal] ########
+browse parallel=6: 32 tai nguyen, ma: 200x32, ket noi TCP moi: 6
+
+######## CN06-03 [normal] ########
+browse parallel=32: 32 tai nguyen, ma: 200x32, ket noi TCP moi: 31
+      1 1000001 10.77.0.30->10.77.0.20 LAB R high TCP connection-attempt rate
+
+######## CN09-03 [normal] ########

@@ -1,0 +1,18 @@
+== Ca: W10-01
+mo_ta: A do mat khau: 7 lan sai lien tiep
+ky_vong: 401 x5 roi 429 (khoa IP); SID 1000017; auth login_fail/login_locked
+== Alert theo SID (khong tinh SID 9xxxxxx)
+      1 1000017 10.77.0.20->10.77.0.10 LAB A many 401 responses - password guessing
+== Thoi diem alert dau tien moi SID
+1000017 2026-11-10T08:10:17.671638+0700
+== HTTP thay boi Suricata
+      5 10.77.0.10 POST /api/login -> 401
+      2 10.77.0.10 POST /api/login -> 429
+== Nginx access log
+      5 10.77.0.10 POST /api/login 401
+      2 10.77.0.10 POST /api/login 429
+== PCAP
+goi: 70
+SYN (khong ACK) tu nguon toi B: 7
+So cong dich khac nhau nhan SYN: 1
+RST/ACK tu B: 0

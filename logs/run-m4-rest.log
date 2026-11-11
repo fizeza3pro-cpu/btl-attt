@@ -1,0 +1,34 @@
+
+######## CN09-03 [normal] ########
+idle 60s
+
+######## E01-01 [attack] ########
+Nmap done: 1 IP address (1 host up) scanned in 31.70 seconds
+
+######## E01-02 [attack] ########
+Nmap done: 1 IP address (1 host up) scanned in 31.55 seconds
+
+######## E01-03 [attack] ########
+Nmap done: 1 IP address (1 host up) scanned in 31.62 seconds
+
+######## E02a-01 [attack] ########
+403
+      1 1000002 10.77.0.10->10.77.0.20 LAB W decoy path requested
+
+######## E02b-01 [attack] ########
+403
+      1 1000002 10.77.0.10->10.77.0.20 LAB W decoy path requested
+
+######## E02c-01 [attack] ########
+403
+      1 1000002 10.77.0.10->10.77.0.20 LAB W decoy path requested
+
+######## E02d-01 [edge] ########
+404
+
+######## E02e-01 [attack] ########
+403
+      1 1000002 10.77.0.10->10.77.0.20 LAB W decoy path requested
+
+XONG phan: rest
+EXIT=0

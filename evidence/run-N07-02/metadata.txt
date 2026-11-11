@@ -1,0 +1,11 @@
+run_id: N07-02
+mo_ta: Duong dan hop le va gan giong bay
+ky_vong: Khong 1000002
+nhan: normal
+bat_dau: 2026-11-08T20:21:45,884871033+07:00
+may: laamf-tung-VirtualBox
+suricata: This is Suricata version 8.0.3 RELEASE
+rules_sha256: 538c9e2ec14363618089d725e8a9b02ee7c9aa9749eacc21dd30d2d96340528e
+suricata_yaml_sha256: 14bcd23a578c8ea4e4545aa9a3a4089501e2e2db3e3a3a1687a002e2a5486055
+nft_lab_response: co
+ket_thuc: 2026-11-08T20:21:52,447186128+07:00

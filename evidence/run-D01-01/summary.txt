@@ -1,0 +1,27 @@
+== Ca: D01-01
+mo_ta: Chuoi danh lua: A bi chuyen sang honeypot, dung honeytoken
+ky_vong: A thay trang admin gia; moi thao tac ghi vao events.jsonl; C khong bi anh huong
+== Alert theo SID (khong tinh SID 9xxxxxx)
+      5 1000002 10.77.0.10->10.77.0.20 LAB W decoy path requested
+      1 1000002 10.77.0.30->10.77.0.20 LAB W decoy path requested
+      3 1000007 10.77.0.20->10.77.0.10 LAB W decoy path served non-403 response
+== Thoi diem alert dau tien moi SID
+1000002 2026-11-10T08:07:02.281409+0700
+1000007 2026-11-10T08:07:03.729727+0700
+== HTTP thay boi Suricata
+      1 10.77.0.10 GET / -> 200
+      1 10.77.0.10 GET /admin -> 200
+      2 10.77.0.10 GET /admin -> 403
+      1 10.77.0.10 GET /api/admin/orders -> 200
+      1 10.77.0.10 GET /backup/db-2026-11.sql.gz -> 200
+      1 10.77.0.10 POST /admin/login -> 200
+      1 10.77.0.10 POST /admin/login -> 302
+      1 10.77.0.30 GET /admin -> 403
+== Nginx access log
+      2 10.77.0.10 GET /admin 403
+      1 10.77.0.30 GET /admin 403
+== PCAP
+goi: 103
+SYN (khong ACK) tu nguon toi B: 10
+So cong dich khac nhau nhan SYN: 2
+RST/ACK tu B: 0

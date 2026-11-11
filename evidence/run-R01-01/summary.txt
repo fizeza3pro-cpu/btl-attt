@@ -1,0 +1,14 @@
+== Ca: R01-01
+mo_ta: Chan thu cong A muc 1 (TCP/80, 60 s), xac minh, phuc hoi
+ky_vong: A: 200 -> that bai khi bi chan -> 200 sau het han; counter tang; SSH cua A khong bi anh huong
+== Alert theo SID (khong tinh SID 9xxxxxx)
+== Thoi diem alert dau tien moi SID
+== HTTP thay boi Suricata
+      2 10.77.0.10 GET / -> 200
+== Nginx access log
+      2 10.77.0.10 GET / 200
+== PCAP
+goi: 69
+SYN (khong ACK) tu nguon toi B: 37
+So cong dich khac nhau nhan SYN: 2
+RST/ACK tu B: 0

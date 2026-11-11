@@ -1,0 +1,20 @@
+== Ca: A03-04
+mo_ta: Tham do cong roi duong dan moi trong 60 s
+ky_vong: 1000001 + 1000003 + 1000002
+== Alert theo SID (khong tinh SID 9xxxxxx)
+      1 1000001 10.77.0.10->10.77.0.20 LAB R high TCP connection-attempt rate
+      1 1000002 10.77.0.10->10.77.0.20 LAB W decoy path requested
+      1 1000003 10.77.0.20->10.77.0.10 LAB R many RST/ACK from server - closed ports probed
+== Thoi diem alert dau tien moi SID
+1000001 2026-11-08T20:28:58.386536+0700
+1000002 2026-11-08T20:29:07.922561+0700
+1000003 2026-11-08T20:28:58.483352+0700
+== HTTP thay boi Suricata
+      1 10.77.0.10 GET /lab-admin -> 403
+== Nginx access log
+      1 10.77.0.10 GET /lab-admin 403
+== PCAP
+goi: 214
+SYN (khong ACK) tu nguon toi B: 101
+So cong dich khac nhau nhan SYN: 100
+RST/ACK tu B: 98

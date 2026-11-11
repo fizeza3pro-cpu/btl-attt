@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lab Shop — Phụ kiện công nghệ</title>
+  <link rel="stylesheet" href="shop.css">
+  <!-- TODO(dev): tai khoan quan tri tam thoi admin / LabShop@2026! - xoa truoc khi len production. Backup DB: /backup/ -->
+</head>
+<body>
+  <div class="topbar"><div class="in"><span>🚚 Miễn phí giao hàng đơn từ 500.000 ₫</span><span>Hotline 1900 0000 · 8:00–22:00</span></div></div>
+  <header><div class="bar">
+    <a class="logo" href="index.html"><span class="mark">⚡</span>LAB<span>SHOP</span></a>
+    <nav><a class="active" href="index.html">Sản phẩm</a><a href="about.html">Giới thiệu</a><a href="login.html">Đăng nhập</a></nav>
+    <div class="search">🔍 Tìm tai nghe, bàn phím…</div>
+    <span class="srv" data-srv>● Đang kiểm tra máy chủ…</span>
+    <a class="cartlink" href="cart.html">🛒 Giỏ hàng<b data-cart-count>0</b></a>
+  </div></header>
+
+  <section class="hero"><div class="in">
+    <div>
+      <span class="tag">Tuần lễ công nghệ · Giảm đến 25%</span>
+      <h1>Phụ kiện công nghệ chính hãng cho góc làm việc của bạn</h1>
+      <p>Bảo hành 12 tháng, đổi trả 7 ngày, giao nhanh trong mạng lab 10.77.0.0/24.</p>
+      <a class="cta" href="#san-pham">Mua sắm ngay →</a>
+    </div>
+    <div class="art">🎧⌨️<br>🖱️🖥️</div>
+  </div></section>
+
+  <section class="perks"><div class="in">
+    <div class="perk"><span class="i">🚚</span><div><b>Giao nhanh 2h</b><small>Nội thành</small></div></div>
+    <div class="perk"><span class="i">🛡️</span><div><b>Bảo hành 12 tháng</b><small>Chính hãng</small></div></div>
+    <div class="perk"><span class="i">↩️</span><div><b>Đổi trả 7 ngày</b><small>Miễn phí</small></div></div>
+    <div class="perk"><span class="i">🔒</span><div><b>Máy chủ được giám sát</b><small>Suricata IDS</small></div></div>
+  </div></section>
+
+  <main id="san-pham">
+    <div class="sec-head"><h2>Sản phẩm nổi bật</h2><span>8 sản phẩm</span></div>
+    <div class="chips"><span class="chip on">Tất cả</span><span class="chip">Âm thanh</span><span class="chip">Bàn phím & chuột</span><span class="chip">Màn hình</span><span class="chip">Lưu trữ</span></div>
+    <div class="grid" id="products"></div>
+  </main>
+
+  <footer>
+    <div class="in">
+      <div><b>⚡ LAB SHOP</b>Cửa hàng minh họa cho bài tập lớn An toàn thông tin. Máy chủ web được bảo vệ bởi Suricata IDS và phản ứng tự động bằng nftables.</div>
+      <div><b>Hỗ trợ</b>Chính sách đổi trả<br>Bảo hành<br>Vận chuyển</div>
+      <div><b>Tài khoản</b><a href="login.html">Đăng nhập</a><br><a href="cart.html">Giỏ hàng</a></div>
+    </div>
+    <div class="copy">© 2026 Lab Shop — trang web phục vụ thí nghiệm trong mạng cô lập.</div>
+  </footer>
+  <script src="shop.js"></script>
+  <script>renderProducts(document.getElementById('products'));</script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+# Rule cua bai lab - nap tu /etc/suricata/rules/local.rules
+# Quy uoc SID:
+#   1000001-1000099 : rule phat hien cua bai
+#   9000000-9000999 : rule kiem tra he thong (khong tinh vao danh gia)
+# Vai tro tin hieu (dung cho chinh sach phan ung):
+#   weak    = de bao nham, gia mao IP duoc
+#   medium  = cung co, gia mao IP duoc (goi don le)
+#   strong  = can ket noi TCP da bat tay, KHONG gia mao IP duoc
+
+# ---------- Kiem tra he thong ----------
+alert http any any -> $HOME_NET 80 (msg:"LAB TEST sensor sanity check"; flow:established,to_server; http.uri; content:"/suricata-sanity-check"; startswith; classtype:misc-activity; sid:9000001; rev:1;)
+
+# ---------- Nhom R: trinh sat ----------
+
+# SID 1000001 - tin hieu YEU: toc do mo ket noi TCP cao tu mot nguon.
+# Do toc do SYN, KHONG dem so cong khac nhau -> khong goi la "scan" neu chua co bang chung khac.
+# flags:S,CE = co SYN, bo qua CWR/ECE. threshold type both = toi da 1 alert / nguon / 10 s.
+alert tcp any any -> $HOME_NET any (msg:"LAB R high TCP connection-attempt rate"; flow:stateless; flags:S,CE; threshold:type both,track by_src,count 10,seconds 10; classtype:attempted-recon; priority:3; metadata:signal weak, spoofable yes; sid:1000001; rev:2;)
+
+# SID 1000003 - tin hieu CUNG CO: B tra nhieu RST/ACK -> co nguoi thu nhieu cong dong.
+# Nghi pham la dest_ip cua alert nay. Web hop le (cong 80 mo) gan nhu khong sinh RST/ACK.
+alert tcp $HOME_NET any -> any any (msg:"LAB R many RST/ACK from server - closed ports probed"; flow:stateless; flags:RA; threshold:type both,track by_dst,count 10,seconds 10; classtype:attempted-recon; priority:2; metadata:signal medium, spoofable yes, suspect dest; sid:1000003; rev:1;)
+
+# SID 1000005 - tin hieu CUNG CO, cua so DAI: bat tham do cong CHAM (diem mu cua 1000003, xem M4/E01).
+# Tham do 1 cong / 1,5 s chi tao ~7 RST/ACK / 10 s (duoi nguong 1000003) nhung ~40 RST/ACK / 60 s.
+# M4: moi ca binh thuong co 0 RST/ACK tu B -> cua so dai khong lam tang bao nham trong lab.
+alert tcp $HOME_NET any -> any any (msg:"LAB R RST/ACK from server over 60s - slow port probe"; flow:stateless; flags:RA; threshold:type both,track by_dst,count 10,seconds 60; classtype:attempted-recon; priority:2; metadata:signal medium, spoofable yes, suspect dest; sid:1000005; rev:1;)
+
+# ---------- Nhom W: web ----------
+
+# SID 1000002 - tin hieu MANH: truy cap duong dan moi (dong bo voi Nginx).
+# rev 3: them /admin (trang quan tri gia cua Lab Shop), giu /lab-admin cho so lieu M1-M5.
+# Khop /admin, /admin/..., /admin?..., /lab-admin...; khong khop /administrator, /lab-administrator.
+alert http any any -> $HOME_NET 80 (msg:"LAB W decoy path requested"; flow:established,to_server; http.uri; content:"admin"; pcre:"/^\/(?:lab-)?admin(?:[\/?]|$)/"; classtype:web-application-attack; priority:1; metadata:signal strong, spoofable no; sid:1000002; rev:4;)
+
+# SID 1000007 - NGHIEM TRONG: duong dan moi tra ve ma KHAC 403 (thu -> co the thanh cong / cau hinh sai).
+# Luu y: khi ke tan cong dang bi DANH LUA, honeypot tra 200 cho /admin -> analyzer bo qua SID nay voi IP dang bi danh lua.
+# rev 2 (10/11/2026): rule GIAO DICH (=>) - so CUNG MOT request/response. Ban rev 1 dung flowbit danh dau ca ket noi TCP:
+# trinh duyet giu keep-alive sau khi vao /admin thi MOI response sau do (/api/health 3 s/lan, css...) deu bi bao 1000007
+# (phat lai PCAP vong: 99 alert, 93 bao nham -> rev 2: 6 alert, 0 bao nham).
+alert http any any => $HOME_NET 80 (msg:"LAB W decoy path served non-403 response"; flow:established; http.uri; content:"admin"; pcre:"/^\/(?:lab-)?admin(?:[\/?]|$)/"; http.stat_code; content:!"403"; classtype:web-application-attack; priority:1; metadata:signal critical, spoofable no, suspect dest; sid:1000007; rev:2;)
+
+# ---------- Nhom W2: tan cong ung dung web (them 10/11/2026, khi Lab Shop co API) ----------
+# Moi nhom kiem tra ca URL (http.uri da chuan hoa) va noi dung POST (http.request_body).
+
+# Path traversal: URI goc (http.uri da chuan hoa co the mat "../") va dang ma hoa
+alert http any any -> $HOME_NET any (msg:"LAB W path traversal (raw URI)"; flow:established,to_server; http.uri.raw; content:"../"; classtype:web-application-attack; priority:2; metadata:signal medium, spoofable no; sid:1000006; rev:1;)
+alert http any any -> $HOME_NET any (msg:"LAB W path traversal (encoded)"; flow:established,to_server; http.uri.raw; content:"%2e%2e"; nocase; classtype:web-application-attack; priority:2; metadata:signal medium, spoofable no; sid:1000008; rev:1;)
+
+# SQL injection: cac mau kinh dien (UNION SELECT, ' OR '1'='1, comment --, DROP TABLE, SLEEP())
+# Dau ';' viet la \x3b vi ';' tran trong pcre lam Suricata hieu nham la ket thuc tuy chon.
+alert http any any -> $HOME_NET any (msg:"LAB W SQL injection pattern in URI"; flow:established,to_server; http.uri; pcre:"/(union[\s+]+(all[\s+]+)?select|'[\s+]*or[\s+]+'?\d+'?[\s+]*=[\s+]*'?\d|'[\s+]*--|\x3b[\s+]*drop[\s+]+table|sleep\(\s*\d+\s*\))/i"; classtype:web-application-attack; priority:2; metadata:signal medium, spoofable no; sid:1000013; rev:2;)
+alert http any any -> $HOME_NET any (msg:"LAB W SQL injection pattern in request body"; flow:established,to_server; http.request_body; pcre:"/(union\s+(all\s+)?select|'\s*or\s+'?\d+'?\s*=\s*'?\d|'\s*--|\x3b\s*drop\s+table|sleep\(\s*\d+\s*\))/i"; classtype:web-application-attack; priority:2; metadata:signal medium, spoofable no; sid:1000015; rev:1;)
+
+# XSS: the script, event handler, javascript:
+alert http any any -> $HOME_NET any (msg:"LAB W XSS pattern in URI"; flow:established,to_server; http.uri; pcre:"/(<script|javascript:|on(error|load|mouseover)\s*=)/i"; classtype:web-application-attack; priority:2; metadata:signal medium, spoofable no; sid:1000014; rev:2;)
+alert http any any -> $HOME_NET any (msg:"LAB W XSS pattern in request body"; flow:established,to_server; http.request_body; pcre:"/(<script|javascript:|on(error|load|mouseover)\s*=)/i"; classtype:web-application-attack; priority:2; metadata:signal medium, spoofable no; sid:1000016; rev:1;)
+
+# Do mat khau (goc nhin mang): may chu tra >= 5 ma 401 cho cung mot may trong 60 s. Nghi pham = dest_ip.
+alert http $HOME_NET 80 -> any any (msg:"LAB A many 401 responses - password guessing"; flow:established,to_client; http.stat_code; content:"401"; threshold:type both,track by_dst,count 5,seconds 60; classtype:attempted-user; priority:2; metadata:signal medium, spoofable no, suspect dest; sid:1000017; rev:1;)

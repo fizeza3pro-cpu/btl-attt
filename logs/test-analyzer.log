@@ -1,0 +1,24 @@
+== EVE that tu cac ca da chay (rule v2 live) ==
+PASS N03-01 web nhe                     ky_vong=log                          thuc_te=log
+PASS N04-01 web don dap                 ky_vong=log                          thuc_te=log
+PASS CN06-01 C 32 ket noi               ky_vong=log                          thuc_te=log
+PASS A01-01 quet cong (20+50)           ky_vong=incident_medium              thuc_te=incident_medium
+PASS A02-01 vao bay                     ky_vong=incident_medium              thuc_te=incident_medium
+PASS A03-01 quet + bay                  ky_vong=recommend_block_l1           thuc_te=recommend_block_l1
+== EVE phat lai voi rule v3 ==
+PASS E01-01 quet cham (v3)              ky_vong=incident_medium              thuc_te=incident_medium
+PASS A03-02 quet + bay (v3)             ky_vong=recommend_block_l1           thuc_te=recommend_block_l1
+== EVE gia lap: tinh huong kho dung trong lab ==
+PASS Gia mao C: 120 diem, toan gia mao duoc ky_vong=incident_high_spoof_suspect  thuc_te=incident_high_spoof_suspect
+PASS Gia mao C (lap lai, khong cong don) ky_vong=incident_high_spoof_suspect  thuc_te=incident_high_spoof_suspect
+PASS A: 120 diem nhung khong tin hieu that ky_vong=incident_high_spoof_suspect  thuc_te=incident_high_spoof_suspect
+PASS Chi tin hieu yeu lap lai           ky_vong=log                          thuc_te=log
+PASS C that su vao bay (dang bao ve)    ky_vong=incident_high_protected      thuc_te=incident_high_protected
+PASS Nguon la 10.77.0.40                ky_vong=recommend_only_out_of_scope  thuc_te=recommend_only_out_of_scope
+PASS IP ngoai mang lab                  ky_vong=log                          thuc_te=log
+PASS Bay tra ma khac 403 (nghiem trong) ky_vong=recommend_block_l1           thuc_te=recommend_block_l1
+PASS Du lieu doc hai + JSON hong        ky_vong=incident_medium              thuc_te=incident_medium
+PASS khong co ky tu dieu khien trong output
+== Che do offline khong bao gio goi executor ==
+PASS --offline --mode apply: firewall khong doi
+== Tong: PASS=19 FAIL=0 ==

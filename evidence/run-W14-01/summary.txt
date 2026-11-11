@@ -1,0 +1,16 @@
+== Ca: W14-01
+mo_ta: A gui 15 request dang nhap thật nhanh (vuot gioi han toc do)
+ky_vong: Mot phan bi Nginx tra 429 (rate limit)
+== Alert theo SID (khong tinh SID 9xxxxxx)
+      1 1000001 10.77.0.10->10.77.0.20 LAB R high TCP connection-attempt rate
+== Thoi diem alert dau tien moi SID
+1000001 2026-11-10T08:11:14.862680+0700
+== HTTP thay boi Suricata
+     15 10.77.0.10 POST /api/login -> 429
+== Nginx access log
+     15 10.77.0.10 POST /api/login 429
+== PCAP
+goi: 150
+SYN (khong ACK) tu nguon toi B: 15
+So cong dich khac nhau nhan SYN: 1
+RST/ACK tu B: 0

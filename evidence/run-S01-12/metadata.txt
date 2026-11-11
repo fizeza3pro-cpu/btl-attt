@@ -1,0 +1,11 @@
+run_id: S01-12
+mo_ta: Kich ban SOC: trinh sat, danh lua, can cau, duyet chan
+ky_vong: deceive sau trinh sat; attacker_engaged khi dung honeytoken; l2 sau khi duyet; C khong bi anh huong
+nhan: attack
+bat_dau: 2026-11-10T08:39:20,190514350+07:00
+may: laamf-tung-VirtualBox
+suricata: This is Suricata version 8.0.3 RELEASE
+rules_sha256: 744bad9f153c430733849c7a6522ebea6d3e512d11ff7255662d5aa97df5e10f
+suricata_yaml_sha256: 14bcd23a578c8ea4e4545aa9a3a4089501e2e2db3e3a3a1687a002e2a5486055
+nft_lab_response: co
+ket_thuc: 2026-11-10T08:39:53,628507078+07:00

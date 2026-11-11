@@ -1,0 +1,18 @@
+== Ca: A02-01
+mo_ta: Doc robots.txt roi truy cap duong dan moi
+ky_vong: SID 1000002; khong 1000007 (Nginx tra 403)
+== Alert theo SID (khong tinh SID 9xxxxxx)
+      1 1000002 10.77.0.10->10.77.0.20 LAB W decoy path requested
+== Thoi diem alert dau tien moi SID
+1000002 2026-11-08T19:55:55.961686+0700
+== HTTP thay boi Suricata
+      1 10.77.0.10 GET /lab-admin -> 403
+      1 10.77.0.10 GET /robots.txt -> 200
+== Nginx access log
+      1 10.77.0.10 GET /lab-admin 403
+      1 10.77.0.10 GET /robots.txt 200
+== PCAP
+goi: 20
+SYN (khong ACK) tu nguon toi B: 2
+So cong dich khac nhau nhan SYN: 1
+RST/ACK tu B: 0
