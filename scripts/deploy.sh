@@ -15,6 +15,7 @@
 #
 # Cờ:
 #   --host=labB     máy đích SSH (mặc định: biến LAB_HOST hoặc "labB")
+#   --local         áp thẳng vào MÁY NÀY, không SSH (dùng khi đang ở TRONG B)
 #   --dry-run       chỉ in ra sẽ làm gì, KHÔNG thay đổi gì trên B
 #
 # Trước khi reload luôn KIỂM TRA cú pháp (suricata -T, nginx -t, nft -c);
@@ -27,6 +28,7 @@ set -euo pipefail
 
 HOST="${LAB_HOST:-labB}"
 DRYRUN=0
+LOCAL=0
 COMPONENT=""
 
 # Đường dẫn có thể ghi đè trong deploy.local.conf
@@ -38,6 +40,7 @@ WWW_ROOT="/var/www/lab"
 for a in "$@"; do
   case "$a" in
     --host=*)  HOST="${a#--host=}" ;;
+    --local)   LOCAL=1 ;;
     --dry-run) DRYRUN=1 ;;
     -h|--help) grep '^#' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     sensor|response|soc|web|tools|net|all) COMPONENT="$a" ;;
@@ -140,7 +143,7 @@ SVCLIST="$(echo $ALLSVC | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' ')"
 case " $COMPONENTS " in *" web "*) WEBAPP=1 ;; *) WEBAPP=0 ;; esac
 
 echo "== deploy.sh =="
-echo "  Máy đích : $HOST"
+[ "$LOCAL" = 1 ] && echo "  Máy đích : (máy này — local)" || echo "  Máy đích : $HOST"
 echo "  Mảng     : $COMPONENT"
 echo "  Dịch vụ  : ${SVCLIST:-(không)}  | suricata=$SURI nginx=$NGX nft=$NFT daemon-reload=$DRL"
 echo "  Số file  : $(wc -l < "$MANIFEST")"
@@ -158,10 +161,8 @@ tar -czf "$TARBALL" -C "$ROOT" \
     $(cut -f1 "$MANIFEST" | sort -u) \
     -C "$(dirname "$MANIFEST")" "$(basename "$MANIFEST")"
 
-# B1: đẩy tarball thành FILE trên B (stdin của ssh = tarball)
-cat "$TARBALL" | ssh "$HOST" 'cat > /tmp/lab-deploy.tgz'
-# B2: chạy installer (stdin của ssh = script heredoc; tar đọc từ FILE)
-ssh "$HOST" "MANIFEST_NAME='$(basename "$MANIFEST")' SVCLIST='$SVCLIST' SURI='$SURI' NGX='$NGX' NFT='$NFT' DRL='$DRL' WEBAPP='$WEBAPP' bash -s" <<'REMOTE'
+# Installer dùng chung cho cả local và remote (đọc tarball ở /tmp/lab-deploy.tgz)
+INSTALLER=$(cat <<'REMOTE'
 set -euo pipefail
 WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"; rm -f /tmp/lab-deploy.tgz' EXIT
 tar -xzf /tmp/lab-deploy.tgz -C "$WORK"
@@ -233,6 +234,18 @@ for s in suricata nginx $SVCLIST; do
 done
 echo "Xong trên $(hostname)."
 REMOTE
+)
 
-echo
-echo "✓ Đã đẩy mảng '$COMPONENT' lên $HOST."
+ENVVARS=(MANIFEST_NAME="$(basename "$MANIFEST")" SVCLIST="$SVCLIST" SURI="$SURI" NGX="$NGX" NFT="$NFT" DRL="$DRL" WEBAPP="$WEBAPP")
+
+if [ "$LOCAL" = 1 ]; then
+  # Chạy ngay trên máy này (dùng khi đang ở TRONG B): không SSH
+  cp "$TARBALL" /tmp/lab-deploy.tgz
+  env "${ENVVARS[@]}" bash -c "$INSTALLER"
+  echo; echo "✓ Đã áp mảng '$COMPONENT' vào máy này (local)."
+else
+  # Đẩy qua SSH tới $HOST: B1 chuyển tarball thành FILE, B2 chạy installer
+  cat "$TARBALL" | ssh "$HOST" 'cat > /tmp/lab-deploy.tgz'
+  ssh "$HOST" "${ENVVARS[*]} bash -s" <<<"$INSTALLER"
+  echo; echo "✓ Đã đẩy mảng '$COMPONENT' lên $HOST."
+fi
