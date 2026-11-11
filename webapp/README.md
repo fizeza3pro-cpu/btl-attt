@@ -63,6 +63,19 @@ Mỗi lần đăng nhập đều ghi `auth.jsonl` (analyzer/dashboard của P2/P
 
 ## Deploy lên B
 
-> Cần bổ sung sau: tạo venv trên B tại `/usr/local/lib/lab/webapp/venv`, sửa
-> `lab-shop-api.service` chạy `uvicorn`, và `deploy.sh web` lo cài venv.
-> Hiện tại mục này dùng để **dev local**; khi chốt sẽ nối vào quy trình deploy.
+```bash
+bash scripts/deploy.sh web
+```
+`deploy.sh web` tự: đẩy `webapp/` vào `/usr/local/lib/lab/webapp/`, dựng venv
+`.../webapp/venv` + cài `requirements.txt`, tạo `lab.db` ở `/var/lib/lab-shop/`
+(chỉ lần đầu), cập nhật `lab-shop-api.service` (chạy `app.py` bằng venv), kiểm tra
+`nginx -t` rồi reload + restart. Nginx đã proxy `/api/` → `127.0.0.1:8081`.
+
+Lần đầu trên B cần gói venv: `sudo apt-get install -y python3.14-venv`.
+
+**Bật/tắt lỗ hổng trên B (cho demo P4):**
+```bash
+ssh labB 'echo LAB_VULN=1 | sudo tee /etc/default/lab-shop && sudo systemctl restart lab-shop-api'   # BẬT
+ssh labB 'echo LAB_VULN=0 | sudo tee /etc/default/lab-shop && sudo systemctl restart lab-shop-api'   # TẮT
+```
+Dữ liệu ở `/var/lib/lab-shop/lab.db`, log xác thực ở `/var/log/lab-shop/auth.jsonl`.

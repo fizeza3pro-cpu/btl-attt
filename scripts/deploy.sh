@@ -77,7 +77,11 @@ manifest_soc() {
   emit config/nginx-honeypot.conf    "$NGINX_HP_DEST"                   root root 0644
 }
 manifest_web() {
-  emit scripts/lab-shop-api.py       /usr/local/lib/lab/lab-shop-api.py root root 0755
+  # Web app mới: FastAPI + SQLite trong /usr/local/lib/lab/webapp (chạy bằng venv)
+  emit webapp/app.py                 /usr/local/lib/lab/webapp/app.py        root root 0755
+  emit webapp/seed.py                /usr/local/lib/lab/webapp/seed.py       root root 0755
+  emit webapp/db/schema.sql          /usr/local/lib/lab/webapp/db/schema.sql root root 0644
+  emit webapp/requirements.txt       /usr/local/lib/lab/webapp/requirements.txt root root 0644
   emit config/lab-shop-api.service   /etc/systemd/system/lab-shop-api.service root root 0644
   emit config/nginx-lab.conf         "$NGINX_LAB_DEST"                  root root 0644
   local f
@@ -118,7 +122,7 @@ COMPONENTS="$COMPONENT"
 [ "$COMPONENT" = "all" ] && COMPONENTS="sensor response soc web net tools"
 
 # Gom manifest + kế hoạch dịch vụ
-MANIFEST="$(mktemp)"; trap 'rm -f "$MANIFEST" "$TARBALL" 2>/dev/null || true' EXIT
+MANIFEST="$(mktemp)"; TARBALL=""; trap 'rm -f "${MANIFEST:-}" "${TARBALL:-}" 2>/dev/null || true' EXIT
 ALLSVC=""
 for c in $COMPONENTS; do
   "manifest_$c" >> "$MANIFEST"
@@ -132,6 +136,8 @@ for c in $COMPONENTS; do
 done
 SURI=${SURI:-0}; NGX=${NGX:-0}; NFT=${NFT:-0}; DRL=${DRL:-0}
 SVCLIST="$(echo $ALLSVC | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' ')"
+# Mảng web cần dựng venv FastAPI + seed DB trên B
+case " $COMPONENTS " in *" web "*) WEBAPP=1 ;; *) WEBAPP=0 ;; esac
 
 echo "== deploy.sh =="
 echo "  Máy đích : $HOST"
@@ -148,17 +154,19 @@ fi
 
 # Đóng gói: manifest + đúng các file cần đẩy (giữ đường dẫn tương đối)
 TARBALL="$(mktemp --suffix=.tgz)"
-tar -czf "$TARBALL" -C "$ROOT" --transform='s,^,repo/,' \
+tar -czf "$TARBALL" -C "$ROOT" \
     $(cut -f1 "$MANIFEST" | sort -u) \
     -C "$(dirname "$MANIFEST")" "$(basename "$MANIFEST")"
 
-# Đưa lên B và cài bằng installer từ xa
-cat "$TARBALL" | ssh "$HOST" "MANIFEST_NAME='$(basename "$MANIFEST")' SVCLIST='$SVCLIST' SURI='$SURI' NGX='$NGX' NFT='$NFT' DRL='$DRL' bash -s" <<'REMOTE'
+# B1: đẩy tarball thành FILE trên B (stdin của ssh = tarball)
+cat "$TARBALL" | ssh "$HOST" 'cat > /tmp/lab-deploy.tgz'
+# B2: chạy installer (stdin của ssh = script heredoc; tar đọc từ FILE)
+ssh "$HOST" "MANIFEST_NAME='$(basename "$MANIFEST")' SVCLIST='$SVCLIST' SURI='$SURI' NGX='$NGX' NFT='$NFT' DRL='$DRL' WEBAPP='$WEBAPP' bash -s" <<'REMOTE'
 set -euo pipefail
-WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
-tar -xzf - -C "$WORK"
+WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"; rm -f /tmp/lab-deploy.tgz' EXIT
+tar -xzf /tmp/lab-deploy.tgz -C "$WORK"
 MAN="$WORK/$MANIFEST_NAME"
-cd "$WORK/repo"
+cd "$WORK"
 
 echo "-- Cài file --"
 while IFS=$'\t' read -r rel dest owner group mode; do
@@ -177,6 +185,23 @@ if [ "$NGX" = 1 ]; then
   for sa in /etc/nginx/sites-available/lab /etc/nginx/sites-available/lab-honeypot; do
     [ -f "$sa" ] && sudo ln -sf "$sa" "/etc/nginx/sites-enabled/$(basename "$sa")"
   done
+fi
+
+# Web app: dựng venv FastAPI + seed CSDL (idempotent)
+if [ "$WEBAPP" = 1 ]; then
+  echo "-- Web app: venv + CSDL --"
+  VENV=/usr/local/lib/lab/webapp/venv
+  [ -x "$VENV/bin/python" ] || sudo python3 -m venv "$VENV"
+  sudo "$VENV/bin/pip" install -q --upgrade pip
+  sudo "$VENV/bin/pip" install -q -r /usr/local/lib/lab/webapp/requirements.txt \
+    && echo "  ✓ venv + fastapi/uvicorn" || { echo "  ✗ pip cài thất bại (B có ra pypi không?)"; exit 1; }
+  sudo install -d -o labshop -g labshop -m 0750 /var/lib/lab-shop
+  if sudo test ! -f /var/lib/lab-shop/lab.db; then
+    sudo -u labshop "$VENV/bin/python" /usr/local/lib/lab/webapp/seed.py /var/lib/lab-shop/lab.db \
+      && echo "  ✓ tạo lab.db" || echo "  ! seed lab.db lỗi"
+  else
+    echo "  ✓ lab.db đã có (giữ nguyên đơn hàng)"
+  fi
 fi
 
 echo "-- Kiểm tra cú pháp --"

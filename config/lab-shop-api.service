@@ -1,5 +1,5 @@
 [Unit]
-Description=Lab Shop API (backend cua trang ban hang trong lab)
+Description=Lab Shop API (backend FastAPI + SQLite cua trang ban hang trong lab)
 After=network.target
 
 [Service]
@@ -7,9 +7,24 @@ Type=simple
 User=labshop
 Group=labshop
 UMask=0022
+# /var/log/lab-shop (auth.jsonl) va /var/lib/lab-shop (lab.db) cho user labshop
 LogsDirectory=lab-shop
 LogsDirectoryMode=0755
-ExecStart=/usr/bin/python3 /usr/local/lib/lab/lab-shop-api.py
+StateDirectory=lab-shop
+StateDirectoryMode=0750
+WorkingDirectory=/usr/local/lib/lab/webapp
+Environment=LAB_DB=/var/lib/lab-shop/lab.db
+Environment=LAB_WWW=/var/www/lab
+Environment="LAB_SERVER=B 10.77.0.20"
+Environment=LAB_HOST=127.0.0.1
+Environment=LAB_PORT=8081
+# LAB_VULN=0 (mac dinh, an toan). Bat lo hong khi demo:
+#   echo LAB_VULN=1 | sudo tee /etc/default/lab-shop && sudo systemctl restart lab-shop-api
+Environment=LAB_VULN=0
+EnvironmentFile=-/etc/default/lab-shop
+# Tao lab.db neu chua co (chi lan dau; KHONG ghi de de giu don hang)
+ExecStartPre=/bin/sh -c '[ -f /var/lib/lab-shop/lab.db ] || /usr/local/lib/lab/webapp/venv/bin/python /usr/local/lib/lab/webapp/seed.py /var/lib/lab-shop/lab.db'
+ExecStart=/usr/local/lib/lab/webapp/venv/bin/python /usr/local/lib/lab/webapp/app.py
 Restart=on-failure
 RestartSec=2
 NoNewPrivileges=yes
