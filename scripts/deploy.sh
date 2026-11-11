@@ -33,7 +33,7 @@ COMPONENT=""
 
 # Đường dẫn có thể ghi đè trong deploy.local.conf
 NGINX_LAB_DEST="/etc/nginx/sites-available/lab"
-NGINX_HP_DEST="/etc/nginx/sites-available/lab-honeypot"
+NGINX_HP_DEST="/etc/nginx/sites-available/honeypot"
 WWW_ROOT="/var/www/lab"
 [ -f "$(dirname "$0")/../deploy.local.conf" ] && . "$(dirname "$0")/../deploy.local.conf"
 
@@ -183,7 +183,7 @@ done < "$MAN"
 
 # nginx: đảm bảo bật site (sites-available -> sites-enabled)
 if [ "$NGX" = 1 ]; then
-  for sa in /etc/nginx/sites-available/lab /etc/nginx/sites-available/lab-honeypot; do
+  for sa in "$NGINX_LAB_DEST" "$NGINX_HP_DEST"; do
     [ -f "$sa" ] && sudo ln -sf "$sa" "/etc/nginx/sites-enabled/$(basename "$sa")"
   done
 fi
@@ -236,7 +236,7 @@ echo "Xong trên $(hostname)."
 REMOTE
 )
 
-ENVVARS=(MANIFEST_NAME="$(basename "$MANIFEST")" SVCLIST="$SVCLIST" SURI="$SURI" NGX="$NGX" NFT="$NFT" DRL="$DRL" WEBAPP="$WEBAPP")
+ENVVARS=(MANIFEST_NAME="$(basename "$MANIFEST")" NGINX_LAB_DEST="$NGINX_LAB_DEST" NGINX_HP_DEST="$NGINX_HP_DEST" SVCLIST="$SVCLIST" SURI="$SURI" NGX="$NGX" NFT="$NFT" DRL="$DRL" WEBAPP="$WEBAPP")
 
 if [ "$LOCAL" = 1 ]; then
   # Chạy ngay trên máy này (dùng khi đang ở TRONG B): không SSH
