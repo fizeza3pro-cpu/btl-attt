@@ -1,0 +1,4 @@
+# Lab Shop (FastAPI + SQLite). SQLite có sẵn trong Python, không cần cài.
+fastapi>=0.115
+uvicorn>=0.32
+# Gợi ý trên B (Linux) có thể dùng uvicorn[standard] để nhanh hơn.

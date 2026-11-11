@@ -27,6 +27,14 @@ desktop.ini
 __pycache__/
 *.pyc
 
+# === Web app (webapp/) — artifact không commit ===
+.venv/
+webapp/lab.db
+webapp/lab.db-*
+webapp/logs/
+*.db-wal
+*.db-shm
+
 # === Cục bộ của từng người, không chia sẻ ===
 *.local
 .env
