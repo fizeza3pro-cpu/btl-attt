@@ -1,0 +1,19 @@
+# Mạng máy B. Áp: sudo cp config/netplan-lab.yaml /etc/netplan/99-lab.yaml && sudo chmod 600 /etc/netplan/99-lab.yaml && sudo netplan apply
+#
+# YÊU CẦU: VM có 3 card mạng theo THỨ TỰ (trong VirtualBox → Settings → Network):
+#   Adapter 1 = NAT                         -> enp0s3 (ra internet để cài gói)
+#   Adapter 2 = Host-only "lab" 10.77.0.0/24 -> enp0s8 (Suricata giám sát)
+#   Adapter 3 = Host-only "mgmt" 192.168.56.0/24 -> enp0s9 (SSH, dashboard)
+#
+# Nếu dùng bản Ubuntu DESKTOP (NetworkManager): có thể đặt IP tĩnh trong
+# Settings → Network của GNOME thay cho file này (enp0s8=10.77.0.20, enp0s9=192.168.56.101).
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    enp0s3:
+      dhcp4: true
+    enp0s8:
+      addresses: [10.77.0.20/24]
+    enp0s9:
+      addresses: [192.168.56.101/24]

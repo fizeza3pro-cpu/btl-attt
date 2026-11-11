@@ -39,6 +39,13 @@ cd btl-attt
 ```
 
 ### 2.3. Lấy môi trường (import VM)
+
+> **Hai cách có máy B:**
+> - **Cách A — Import OVA** (nhanh, foolproof, nhưng file ~7 GB): mục này.
+> - **Cách B — Tự dựng từ Ubuntu trắng** (không cần tải OVA): cài Ubuntu 26.04 + 3 card
+>   mạng (xem `config/netplan-lab.yaml`), `git clone`, rồi `sudo bash scripts/install-b.sh`.
+>   Script tự cài gói + tạo user + dịch vụ + deploy. Thêm `DEV_TOOLS=1` để có Claude Code + Codex.
+
 1. Tải `lab-B.ova`, `lab-Kali.ova` từ Drive nhóm.
 2. VirtualBox → **File → Import Appliance** → chọn từng file.
 3. Đảm bảo có mạng **Host-only** `192.168.56.0/24` (VirtualBox thường tự tạo `vboxnet0` = 192.168.56.1). File → Tools → Network Manager để kiểm tra.
