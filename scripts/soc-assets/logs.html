@@ -1,0 +1,16 @@
+<section class="panel log-console" id="live-logs" aria-label="Log trực tiếp">
+  <div class="log-head"><div><h2>Luồng vận hành</h2><p class="log-help">Dòng ĐIỂM chỉ xuất hiện khi một SID mới được cộng. Thời gian kèm ngày/tháng.</p></div><span id="log-state" class="log-state" role="status">Đang kết nối…</span><button class="button quiet" id="log-full" type="button">Mở toàn màn hình</button></div>
+  <form id="log-filter" class="log-toolbar">
+    <label>Nguồn<select id="log-source"><option value="">Tất cả hoạt động đã lọc lặp</option><option value="score">Điểm được cộng</option><option value="web">Web thật</option><option value="webfake">Web giả</option><option value="eve">Suricata thô (có thể lặp)</option><option value="auth">Đăng nhập</option><option value="hp">Honeypot</option><option value="inc">Analyzer</option><option value="dec">Người vận hành</option><option value="firewall">Firewall</option><option value="rule">Rule mới</option><option value="journal">Log dịch vụ</option></select></label>
+    <label>Địa chỉ IP<input id="log-ip" name="log-ip" placeholder="Ví dụ 10.77.0.10…" autocomplete="off" spellcheck="false"></label>
+    <label>Tìm nội dung<input id="log-query" name="log-query" placeholder="Email, đường dẫn, SID…" autocomplete="off"></label>
+    <label>Khoảng thời gian<select id="log-range"><option value="3600">1 giờ</option><option value="86400">24 giờ</option><option value="604800">7 ngày</option></select></label>
+    <label>Mức độ<select id="log-severity"><option value="">Tất cả</option><option value="info">Thông tin</option><option value="warning">Cảnh báo</option><option value="critical">Nghiêm trọng</option><option value="error">Lỗi</option></select></label>
+    <button class="button" type="submit">Áp dụng bộ lọc</button>
+  </form>
+  <div class="log-actions"><button class="button quiet" id="log-pause" type="button">Tạm dừng hiển thị</button><button class="button quiet" id="log-clear" type="button">Xóa màn hình</button><button class="button quiet" id="log-older" type="button">Tải thêm lịch sử</button><button class="button quiet" id="log-copy" type="button">Sao chép</button><button class="button quiet" id="log-download" type="button">Tải JSON</button><label><input type="checkbox" id="log-auto" checked> Tự cuộn</label><label><input type="checkbox" id="log-noise"> Hiện health và file tĩnh</label><span id="log-count" class="muted"></span></div>
+  <div class="log-columns"><span>Thời gian</span><span>Nguồn</span><span>IP</span><span>Nội dung · bấm dòng để xem bản ghi</span></div>
+  <div id="log-body" class="log-body" tabindex="0" aria-label="Các dòng log"></div>
+  <details id="log-detail" hidden><summary>Bản ghi nguồn đã che trường bí mật</summary><pre id="log-record"></pre></details>
+  <details class="source-health"><summary>Tình trạng nguồn log <span id="log-health-summary"></span></summary><div id="log-health"></div></details>
+</section>

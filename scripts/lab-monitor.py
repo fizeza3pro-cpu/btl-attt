@@ -408,6 +408,14 @@ def header():
     print(f"{CYN}{'═' * w}{R}")
 
 def main():
+    from lab_events import Store, DB, follow
+    if os.path.exists(DB) and "--legacy" not in ARGS:
+        print("Màn hình giám sát · cùng kho sự kiện với dashboard (Ctrl+C để thoát)", flush=True)
+        try:
+            follow(Store(), show_all=SHOW_ALL, show_health=SHOW_HEALTH)
+        except KeyboardInterrupt:
+            print("Đã thoát màn hình giám sát.")
+        return
     header()
     jobs = [(FILES["web"], on_web(False)), (FILES["webfake"], on_web(True)), (FILES["eve"], on_eve),
             (FILES["hp"], on_hp), (FILES["auth"], on_auth), (FILES["inc"], on_inc), (FILES["dec"], on_dec)]

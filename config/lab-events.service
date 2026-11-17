@@ -1,0 +1,22 @@
+[Unit]
+Description=Shared SOC event collector and persistent log history
+After=network.target lab-shop-api.service lab-analyzer.service
+
+[Service]
+Type=simple
+User=labresp
+Group=labresp
+SupplementaryGroups=systemd-journal
+UMask=0027
+StateDirectory=lab-soc
+StateDirectoryMode=0750
+ExecStart=/usr/bin/python3 /usr/local/lib/lab/lab_events.py --collect
+Restart=on-failure
+RestartSec=3
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/var/lib/lab-soc
+
+[Install]
+WantedBy=multi-user.target

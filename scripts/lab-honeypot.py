@@ -22,6 +22,7 @@ import time
 import urllib.parse
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from lab_decoy import shop_api
 
 LOG_DIR = os.environ.get("LOGS_DIRECTORY", "/var/log/lab-honeypot")
 EVENTS = os.path.join(LOG_DIR, "events.jsonl")
@@ -91,6 +92,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         p = urllib.parse.urlsplit(self.path)
+        if shop_api(self, self.path, log=log_event):
+            return
         ua = self.headers.get("User-Agent", "")
         if p.path.startswith("/backup/"):
             log_event(self.ip(), "honeytoken_file", path=p.path, ua=ua)
@@ -111,6 +114,8 @@ class Handler(BaseHTTPRequestHandler):
         p = urllib.parse.urlsplit(self.path)
         n = min(int(self.headers.get("Content-Length") or 0), 2048)
         body = self.rfile.read(n).decode("utf-8", "replace") if n > 0 else ""
+        if shop_api(self, self.path, body, log_event):
+            return
         if p.path.startswith("/api/admin"):
             return self.api_admin(p.path)
         if p.path == "/admin/login":

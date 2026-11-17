@@ -21,6 +21,9 @@ import subprocess
 import time
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from lab_events import Store, DB as EVENT_DB, SOURCES as EVENT_SOURCES, redact
+from soc_stream import StreamMixin, augment_page
 
 BIND = ("192.168.56.101", 9000)
 ALLOWED_CLIENTS = {"192.168.56.1", "192.168.56.101", "127.0.0.1"}   # may that + chinh B (Firefox tren B)
@@ -39,8 +42,9 @@ RG_LAST = RG_DIR + "/last_run.json"
 RG_TRIGGER = RG_DIR + "/trigger"
 RG_LOCK = RG_DIR + "/.proposals.lock"
 RULES_ACTIVE = "/var/lib/lab-rule/active.json"
+SCORE_STATE = "/var/lib/lab-analyzer/score-state.json"
 SERVICES = ["suricata", "nginx", "lab-shop-api", "lab-honeypot", "lab-analyzer", "lab-response", "lab-rulegen",
-            "lab-pcap-ring", "lab-soc"]
+            "lab-pcap-ring", "lab-soc", "lab-events"]
 SERVER_IP = "10.77.0.20"
 LAB_PREFIX = "10.77.0."
 ACTIVE_WINDOW = 1800          # IP hien tren dashboard neu co hoat dong trong 30 phut
@@ -50,6 +54,16 @@ BUCKETS = 30                  # bieu do 30 phut, moi cot 1 phut
 TOKEN = secrets.token_hex(16)
 IP_RE = re.compile(r"^10\.77\.0\.\d{1,3}$")
 LOG_RE = re.compile(r'^(\S+) \S+ \S+ \[([^\]]+)\] "(\S+) (\S+)[^"]*" (\d{3}) (\d+|-) "[^"]*" "([^"]*)"')
+ATTACK_CATALOG = {
+    "T1595": ("Active Scanning", "Reconnaissance"), "T1046": ("Network Service Discovery", "Discovery"),
+    "T1083": ("File and Directory Discovery", "Discovery"), "T1190": ("Exploit Public-Facing Application", "Initial Access"),
+    "T1078": ("Valid Accounts", "Initial Access"), "T1110.001": ("Brute Force: Password Guessing", "Credential Access"),
+    "T1552.001": ("Unsecured Credentials: Credentials In Files", "Credential Access"),
+    "T1213": ("Data from Information Repositories", "Collection"),
+    "T1595.003": ("Active Scanning: Wordlist Scanning", "Reconnaissance"),
+    "T1595.002": ("Active Scanning: Vulnerability Scanning", "Reconnaissance"),
+}
+_POLICY_CACHE = (0.0, {})
 
 
 # ------------------------------ doc du lieu ------------------------------
@@ -67,10 +81,13 @@ def tail_lines(path, max_bytes=600_000):
 
 
 def jsonl(path, max_bytes=600_000):
+    source = next((key for key,value in EVENT_SOURCES.items() if value == path), None)
+    if source and Path(EVENT_DB).exists():
+        return Store().records(source, time.time() - (3600 if source in ("web", "webfake", "eve") else 7*86400))
     out = []
     for line in tail_lines(path, max_bytes):
         try:
-            out.append(json.loads(line))
+            out.append(redact(json.loads(line)))
         except ValueError:
             pass
     return out
@@ -91,6 +108,8 @@ def epoch(s):
 
 
 def nginx_events(path, kind, max_bytes=400_000):
+    if Path(EVENT_DB).exists():
+        return Store().records("web" if path == ACC else "webfake", time.time()-3600)
     out = []
     for line in tail_lines(path, max_bytes):
         m = LOG_RE.match(line)
@@ -184,9 +203,27 @@ def update_proposals(fn):
 def lab_rule(*args):
     try:
         p = subprocess.run(RULE_EXEC + list(args), shell=False, capture_output=True, text=True, timeout=180)
-        return json.loads(p.stdout.strip().splitlines()[-1])
+        lines = p.stdout.strip().splitlines()
+        if lines:
+            return json.loads(lines[-1])
+        return {"rc": p.returncode or -1, "msg": (p.stderr or "lab-rule không trả dữ liệu")[-500:]}
     except Exception as e:  # noqa: BLE001
         return {"rc": -1, "msg": str(e)[:160]}
+
+
+def rule_policy_state():
+    global _POLICY_CACHE
+    if time.time() - _POLICY_CACHE[0] < 2:
+        return _POLICY_CACHE[1]
+    result = lab_rule("policy", "status")
+    state = {"rules": result.get("rules", []), "thresholds": result.get("thresholds", {"incident": 50, "response": 100})} \
+        if result.get("rc") == 0 else {"rules": [], "thresholds": {"incident": 50, "response": 100}}
+    _POLICY_CACHE = (time.time(), state)
+    return state
+
+
+def rule_policy():
+    return rule_policy_state()["rules"]
 
 
 def rulegen_state(alerts):
@@ -195,7 +232,7 @@ def rulegen_state(alerts):
     active = read_json(RULES_ACTIVE, {"rules": []}).get("rules", [])
     hits = {}
     for a in alerts:
-        if 5000000 <= a["sid"] <= 5999999:
+        if 5000000 <= a["sid"] <= 6749999:
             h = hits.setdefault(a["sid"], {"n": 0, "last": None, "ips": set()})
             h["n"] += 1
             h["last"] = max(h["last"] or 0, a["t"] or 0)
@@ -226,9 +263,39 @@ def suspect_of_alert(a):
     return a["dst"] if a.get("src") == SERVER_IP else a.get("src")
 
 
+def score_windows(now, cleared=None, cleared_all=0.0):
+    """Diem hien tai tu cac SID duy nhat trong cua so analyzer, khong tu incident cu."""
+    cleared = cleared or {}
+    policy = {int(r["sid"]): r for r in rule_policy() if isinstance(r.get("sid"), int)}
+    raw = read_json(SCORE_STATE, {"window_seconds": RISK_WINDOW, "devices": {}})
+    window = float(raw.get("window_seconds", RISK_WINDOW))
+    result = {}
+    for ip, signals in (raw.get("devices") or {}).items():
+        cutoff = max(cleared_all, cleared.get(ip, 0.0))
+        active = []
+        for signal in signals if isinstance(signals, list) else []:
+            at = float(signal.get("at") or 0)
+            sid = signal.get("sid")
+            if at <= cutoff or now - at >= window or sid not in policy:
+                continue
+            cfg = policy[sid]
+            active.append({**signal, "delta": cfg["score"], "label": cfg["name"],
+                           "auto_response": cfg.get("auto_response", True),
+                           "expires_in": max(0, int(window - (now - at)))})
+        active.sort(key=lambda x: x.get("at", 0))
+        if active:
+            result[ip] = {"score": sum(x["delta"] for x in active),
+                          "response_score": sum(x["delta"] for x in active if x["auto_response"]), "signals": active,
+                          "last_delta": active[-1]["delta"], "updated": active[-1]["at"]}
+    return result
+
+
 # ------------------------------ tong hop ---------------------------------
 def state():
     now = time.time()
+    policy_state = rule_policy_state()
+    incident_threshold = int(policy_state["thresholds"].get("incident", 50))
+    response_threshold = int(policy_state["thresholds"].get("response", 100))
     alerts, hp, auth, incidents, decisions, web = collect()
     fw = lab_block("status")
     fwm = fw_map(fw)
@@ -239,7 +306,8 @@ def state():
             return None
         return devices.setdefault(ip, {"ip": ip, "first": None, "last": None, "requests": 0, "errors": 0, "alerts": 0,
                                        "honeypot": 0, "honeypot_web": 0, "auth_fail": 0, "auth_ok": 0, "incidents": 0,
-                                       "risk": 0, "decision": None, "attack": [], "ua": "", "last_path": ""})
+                                       "risk": 0, "decision": None, "attack": [], "ua": "", "last_path": "",
+                                       "response_score": 0, "score_signals": [], "last_delta": 0, "score_updated": None})
 
     since = now - ACTIVE_WINDOW   # moi bo dem cua thiet bi tinh trong 30 phut gan nhat
 
@@ -291,11 +359,19 @@ def state():
                 cleared_all = max(cleared_all, dd["t"])
             elif dd.get("ip"):
                 cleared[dd["ip"]] = max(cleared.get(dd["ip"], 0.0), dd["t"])
+    live_scores = score_windows(now, cleared, cleared_all)
+    for ip, live in live_scores.items():
+        d = dev(ip)
+        if d:
+            d["risk"], d["response_score"], d["score_signals"], d["last_delta"], d["score_updated"] = (
+                live["score"], live["response_score"], live["signals"], live["last_delta"], live["updated"])
+            d["attack"] = sorted({s.get("attack") for s in live["signals"] if s.get("attack")})
+            touch(d, live["updated"])
     for i in incidents:
         d = dev(i.get("suspect_ip")) if (i["t"] or 0) >= since else None
         if d:
             d["incidents"] += 1
-            if i["t"] and now - i["t"] < RISK_WINDOW and i["t"] > max(cleared_all, cleared.get(d["ip"], 0.0)):
+            if not Path(SCORE_STATE).exists() and not d["score_signals"] and i["t"] and now - i["t"] < RISK_WINDOW and i["t"] > max(cleared_all, cleared.get(d["ip"], 0.0)):
                 d["risk"], d["decision"] = i.get("score", 0), i.get("decision")
                 d["attack"] = [a["id"] for a in i.get("attack") or []]
     for ip in fwm:
@@ -304,7 +380,7 @@ def state():
             d["last"] = now
     for d in devices.values():
         d["responses"] = fwm.get(d["ip"], [])
-        d["level"] = "high" if d["risk"] >= 100 else "medium" if d["risk"] >= 50 else "low" if d["risk"] > 0 else "none"
+        d["level"] = "high" if d["risk"] >= response_threshold else "medium" if d["risk"] >= incident_threshold else "low" if d["risk"] > 0 else "none"
     active = [d for d in devices.values() if (d["last"] and now - d["last"] <= ACTIVE_WINDOW) or d["responses"]]
     active.sort(key=lambda d: (-(d["risk"] or 0), -(d["last"] or 0)))
 
@@ -341,10 +417,14 @@ def state():
             latest[i["suspect_ip"]] = i
     pending = list(latest.values())
 
-    techniques = {}
+    techniques = {key: {"id": key, "name": value[0], "tactic": value[1], "count": 0, "ips": []}
+                  for key, value in ATTACK_CATALOG.items()}
     for i in incidents:
         for a in i.get("attack") or []:
-            techniques.setdefault(a["id"], {**a, "count": 0})["count"] += 1
+            row = techniques.setdefault(a["id"], {**a, "count": 0, "ips": []})
+            row["count"] += 1
+            if i.get("suspect_ip") and i["suspect_ip"] not in row["ips"]:
+                row["ips"].append(i["suspect_ip"])
 
     # Luong su kien gop (moi nhat truoc)
     feed = []
@@ -382,6 +462,7 @@ def state():
     kpi["rules_pending"] = len(rules["pending"])
     kpi["rules_active"] = len(rules["active"])
     return {"now": now, "mode": mode_info(), "firewall": fw, "kpi": kpi, "devices": active, "pending": pending, "rules": rules,
+            "rule_policy": policy_state["rules"], "thresholds": policy_state["thresholds"],
             "series": series, "labels": labels, "feed": feed, "attack": list(techniques.values()),
             "honeypot": [h for h in hp[-30:]][::-1], "services": services(),
             "incidents": [{k: i.get(k) for k in ("incident_id", "created_at", "suspect_ip", "score", "decision", "attack", "need_approval")}
@@ -409,10 +490,10 @@ def ip_detail(ip):
     for d in decisions:
         if d.get("ip") == ip:
             events.append({"t": d["t"], "type": "decision", "title": d.get("action"), "text": d.get("result", "")})
-    reqs = [w for w in web if w["ip"] == ip and not w["path"].startswith("/api/health")]
+    reqs = [w for w in web if w["ip"] == ip and w["t"] >= now - ACTIVE_WINDOW and not w["path"].startswith("/api/health")]
     for w in reqs[-60:]:
         events.append({"t": w["t"], "type": "web" if w["kind"] == "web" else "honeyweb", "title": f"{w['method']} {w['status']}", "text": w["path"]})
-    events = sorted([e for e in events if e["t"]], key=lambda e: -e["t"])[:200]
+    events = sorted([e for e in events if e["t"] and e["t"] >= now - ACTIVE_WINDOW], key=lambda e: -e["t"])[:200]
     paths = {}
     for w in reqs:
         paths[w["path"].split("?")[0]] = paths.get(w["path"].split("?")[0], 0) + 1
@@ -421,8 +502,13 @@ def ip_detail(ip):
         if i.get("suspect_ip") == ip:
             for a in i.get("attack") or []:
                 attack[a["id"]] = a
+    cleared_all = max((d["t"] for d in decisions if d.get("action") in CLEAR_ACTIONS and d.get("ip") == "*" and d.get("t")), default=0)
+    cleared = max((d["t"] for d in decisions if d.get("action") in CLEAR_ACTIONS and d.get("ip") == ip and d.get("t")), default=0)
+    live = score_windows(now, {ip: cleared}, cleared_all).get(ip, {"score": 0, "response_score": 0, "signals": [], "last_delta": 0})
     return {"ip": ip, "now": now, "responses": st, "events": events, "top_paths": sorted(paths.items(), key=lambda x: -x[1])[:8],
             "ua": reqs[-1]["ua"] if reqs else "", "attack": list(attack.values()),
+            "score": live["score"], "response_score": live["response_score"],
+            "score_signals": live["signals"], "last_delta": live["last_delta"],
             "counts": {"web": len(reqs), "alerts": sum(1 for e in events if e["type"] == "alert"),
                        "honeypot": sum(1 for e in events if e["type"] == "honeypot"), "auth": sum(1 for e in events if e["type"] == "auth")}}
 
@@ -468,7 +554,7 @@ td,th{{border:1px solid #e5e7eb;padding:7px;text-align:left;vertical-align:top}}
 </body></html>"""
 
 
-class Handler(BaseHTTPRequestHandler):
+class Handler(StreamMixin, BaseHTTPRequestHandler):
     server_version = "LabSOC"
     sys_version = ""
 
@@ -494,7 +580,9 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if not self.allowed():
             return
-        if self.path == "/":
+        if self.event_endpoint():
+            return
+        if self.path == "/" or self.path.startswith("/?"):
             return self.send(200, PAGE.replace("__TOKEN__", TOKEN), "text/html; charset=utf-8")
         if self.path == "/api/state":
             return self.send(200, json.dumps(state(), ensure_ascii=False), "application/json; charset=utf-8")
@@ -521,6 +609,10 @@ class Handler(BaseHTTPRequestHandler):
         action, ip, inc = req.get("action"), str(req.get("ip", "")), str(req.get("incident_id", ""))[:64]
         if action in ("rule_approve", "rule_reject", "rule_revoke", "rulegen_run"):
             return self.rule_action(action, str(req.get("rule", ""))[:16])
+        if action in ("policy_save", "policy_reset"):
+            return self.policy_action(action, req)
+        if action in ("policy_thresholds", "mode_set", "custom_add"):
+            return self.settings_action(action, req)
         if not IP_RE.match(ip):
             return self.send(400, json.dumps({"error": "ip khong hop le"}), "application/json")
         mapping = {"approve_l2": [("add", "l2"), ("del", "dec")], "deceive": [("add", "dec")], "block_l1": [("add", "l1")],
@@ -538,6 +630,63 @@ class Handler(BaseHTTPRequestHandler):
         with open(DEC, "a", encoding="utf-8") as f:
             f.write(json.dumps(rec, ensure_ascii=False) + "\n")
         self.send(200, json.dumps(rec, ensure_ascii=False), "application/json; charset=utf-8")
+
+    def policy_action(self, action, req):
+        try:
+            sid = int(req.get("sid"))
+            score = int(req.get("score")) if action == "policy_save" else 0
+            args = ["policy", "reset", str(sid)] if action == "policy_reset" else ["policy", "set", str(sid), str(score)]
+            if action == "policy_save" and req.get("count") not in (None, ""):
+                args += [str(int(req["count"])), str(int(req["seconds"]))]
+            if action == "policy_save":
+                auto_response = req.get("auto_response")
+                if not isinstance(auto_response, bool):
+                    raise ValueError("auto_response")
+                args.append("1" if auto_response else "0")
+        except (TypeError, ValueError, KeyError):
+            return self.send(400, json.dumps({"error": "thông số rule không hợp lệ"}, ensure_ascii=False), "application/json")
+        result = lab_rule(*args)
+        global _POLICY_CACHE
+        _POLICY_CACHE = (0.0, {})
+        rec = {"at": datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds"), "incident_id": "", "ip": "",
+               "rule": str(sid), "action": action, "by": f"nguoi van hanh ({self.client_address[0]})",
+               "result": result.get("msg", ""), "ok": result.get("rc") == 0}
+        with open(DEC, "a", encoding="utf-8") as f:
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+        self.send(200 if rec["ok"] else 400, json.dumps({**rec, "rule_config": result.get("rule")}, ensure_ascii=False), "application/json; charset=utf-8")
+
+    def settings_action(self, action, req):
+        try:
+            if action == "policy_thresholds":
+                incident, response = int(req.get("incident")), int(req.get("response"))
+                args, subject = ["policy", "thresholds", str(incident), str(response)], f"{incident}/{response}"
+            elif action == "mode_set":
+                profile = str(req.get("profile", ""))
+                if profile not in ("recommend", "deceive", "block"):
+                    raise ValueError("profile")
+                args, subject = ["mode", "set", profile], profile
+            else:
+                kind = str(req.get("kind", ""))
+                content = str(req.get("content", ""))
+                name = str(req.get("name", ""))
+                score = int(req.get("score"))
+                if kind not in ("uri", "ua", "host") or len(content) > 64 or len(name) > 64:
+                    raise ValueError("custom")
+                args, subject = ["custom", "add", kind, content, str(score), name], f"{kind}:{content}"
+        except (TypeError, ValueError):
+            return self.send(400, json.dumps({"error": "thông số cấu hình không hợp lệ"}, ensure_ascii=False), "application/json")
+        result = lab_rule(*args)
+        global _POLICY_CACHE
+        _POLICY_CACHE = (0.0, {})
+        rec = {"at": datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds"), "incident_id": "", "ip": "",
+               "rule": subject, "action": action, "by": f"nguoi van hanh ({self.client_address[0]})",
+               "result": result.get("msg", ""), "ok": result.get("rc") == 0}
+        with open(DEC, "a", encoding="utf-8") as f:
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+        payload = {**rec, "mode": {"MODE": result.get("mode"), "RESPONSE": result.get("response")},
+                   "thresholds": result.get("thresholds"), "sid": result.get("sid"),
+                   "reset_scores": result.get("reset_scores", False)}
+        self.send(200 if rec["ok"] else 400, json.dumps(payload, ensure_ascii=False), "application/json; charset=utf-8")
 
     def rule_action(self, action, rule):
         """Duyet / tu choi / thu hoi rule tu sinh. Nap that su do lab-rule (root) lam, sau khi tu kiem tra lai."""
@@ -569,7 +718,7 @@ class Handler(BaseHTTPRequestHandler):
             if new_status and not update_proposals(mark) and action == "rule_reject":
                 ok, summary = False, "phiếu không ở trạng thái chờ duyệt"
         else:  # rule_revoke
-            if not re.fullmatch(r"5\d{6}", rule):
+            if not re.fullmatch(r"[56]\d{6}", rule):
                 return self.send(400, json.dumps({"error": "sid khong hop le"}), "application/json")
             res = lab_rule("revoke", rule)
             ok, summary = res.get("rc") == 0, res.get("msg", "")
@@ -931,6 +1080,9 @@ async function load(){try{S=await (await fetch("/api/state",{cache:"no-store"}))
   if(openIp&&(++tick%3===0)){const b=$("dr-b"),y=b.scrollTop;await openDetail(openIp);b.scrollTop=y}}catch(e){$("clock").textContent="mất kết nối"}}
 load();setInterval(load,2000);
 </script></body></html>"""
+
+# Giao dien moi nam o asset rieng de co the kiem tra, bao tri va cache-bust doc lap.
+PAGE = augment_page((Path(__file__).with_name("soc-assets") / "dashboard.html").read_text(encoding="utf-8"))
 
 if __name__ == "__main__":
     print(f"Lab SOC dashboard v2: http://{BIND[0]}:{BIND[1]}/", flush=True)

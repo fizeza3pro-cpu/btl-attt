@@ -29,13 +29,94 @@ STATE_DIR = "/var/lib/lab-rule"
 ACTIVE = os.path.join(STATE_DIR, "active.json")
 AUTO_RULES = "/var/lib/lab-rule/auto.rules"      # ngoai /etc: dashboard chay voi ProtectSystem=full (/etc chi doc)
 LOCAL_RULES = "/etc/suricata/rules/local.rules"
+POLICY_FILE = "/var/lib/lab-analyzer/rule-policy.json"
+ANALYZER_DEFAULT = "/etc/default/lab-analyzer"
 YAML = "/etc/suricata/suricata.yaml"
 SURICATA = "/usr/bin/suricata"
 SURICATASC = "/usr/bin/suricatasc"
+SYSTEMCTL = "/usr/bin/systemctl"
 URI_OK = re.compile(r"^/[a-z0-9._~/-]{3,63}$")
 UA_OK = re.compile(r"^[a-z0-9]{4,32}$")
 RANGES = {"uri": (5000000, 5499999), "ua": (5500000, 5999999)}
+CUSTOM_RANGES = {"uri": (6000000, 6249999), "ua": (6250000, 6499999), "host": (6500000, 6749999)}
+CUSTOM_UA_OK = re.compile(r"^[A-Za-z0-9._ /:+-]{3,48}$")
+HOST_OK = re.compile(r"^[a-z0-9](?:[a-z0-9.-]{1,61}[a-z0-9])?$")
 MAX_ACTIVE = 200
+DEFAULT_THRESHOLDS = {"incident": 50, "response": 100}
+
+# Cac thuoc tinh an toan (nguon nghi pham, co the gia mao, ATT&CK) van co dinh trong analyzer.
+# Dashboard chi duoc sua diem va nguong dem cua rule co threshold Suricata.
+POLICY_DEFAULTS = {
+    1000001: {"name": "Nhiều yêu cầu kết nối TCP", "category": "Quét cổng", "score": 20, "count": 10, "seconds": 10, "metric": "gói SYN từ cùng một IP"},
+    1000003: {"name": "Máy chủ trả nhiều RST/ACK", "category": "Quét cổng", "score": 50, "count": 10, "seconds": 10, "metric": "gói RST/ACK trả về cùng một IP"},
+    1000005: {"name": "RST/ACK trong cửa sổ dài", "category": "Quét chậm", "score": 50, "count": 10, "seconds": 60, "metric": "gói RST/ACK trả về cùng một IP"},
+    1000002: {"name": "Truy cập đường dẫn admin mồi", "category": "Web", "score": 70},
+    1000007: {"name": "Trang admin mồi trả khác 403", "category": "Web", "score": 100},
+    1000006: {"name": "Path traversal dạng thô", "category": "Web", "score": 50},
+    1000008: {"name": "Path traversal mã hóa", "category": "Web", "score": 50},
+    1000013: {"name": "SQL injection trong URL", "category": "Web", "score": 50},
+    1000015: {"name": "SQL injection trong nội dung gửi", "category": "Web", "score": 50},
+    1000014: {"name": "XSS trong URL", "category": "Web", "score": 50},
+    1000016: {"name": "XSS trong nội dung gửi", "category": "Web", "score": 50},
+    1000017: {"name": "Nhiều phản hồi đăng nhập 401", "category": "Đăng nhập", "score": 50, "count": 5, "seconds": 60, "metric": "phản hồi HTTP 401 về cùng một IP"},
+    2000001: {"name": "Kết nối cổng bẫy", "category": "Honeyport", "score": 40},
+    2000002: {"name": "Xem trang admin giả", "category": "Honeypot", "score": 30},
+    2000003: {"name": "Đăng nhập admin giả", "category": "Honeypot", "score": 60},
+    2000004: {"name": "Dùng tài khoản bẫy", "category": "Honeytoken", "score": 100},
+    2000005: {"name": "Dùng API key bẫy", "category": "Honeytoken", "score": 100},
+    2000006: {"name": "Tải file sao lưu bẫy", "category": "Honeytoken", "score": 100},
+    3000001: {"name": "Sai đăng nhập nhiều lần", "category": "Đăng nhập", "score": 60},
+    3000002: {"name": "Bị khóa do sai đăng nhập", "category": "Đăng nhập", "score": 60},
+}
+
+RULE_MATCHES = {
+    1000001: "TCP SYN tới 10.77.0.20, mọi cổng",
+    1000003: "10 RST/ACK từ máy B trả về cùng một IP",
+    1000005: "RST/ACK từ máy B trong cửa sổ quét chậm",
+    1000002: "HTTP tới 10.77.0.20: /admin, /admin/*, /lab-admin hoặc /lab-admin/*",
+    1000007: "Các đường dẫn admin mồi trên 10.77.0.20 trả mã khác 403",
+    1000006: "Mọi URI tới 10.77.0.20 có chứa ../",
+    1000008: "Mọi URI tới 10.77.0.20 có chứa %2e%2e (không phân biệt hoa thường)",
+    1000013: "URI tới 10.77.0.20 chứa UNION SELECT, OR 1=1, --, DROP TABLE hoặc SLEEP()",
+    1000015: "Nội dung POST tới 10.77.0.20 chứa mẫu SQL injection tương tự",
+    1000014: "URI tới 10.77.0.20 chứa <script, javascript: hoặc onerror/onload/onmouseover=",
+    1000016: "Nội dung POST tới 10.77.0.20 chứa mẫu XSS tương tự",
+    1000017: "Máy B trả HTTP 401 nhiều lần về cùng một IP",
+    2000001: "Kết nối TCP tới cổng bẫy 23, 2222 hoặc 3306",
+    2000002: "Mở trang admin giả khi IP đang bị đánh lừa",
+    2000003: "Gửi form đăng nhập trên trang admin giả",
+    2000004: "Dùng honeytoken admin / LabShop@2026!",
+    2000005: "Dùng API key bẫy của khu admin giả",
+    2000006: "Tải file trong /backup/",
+    3000001: "Ít nhất 5 lần đăng nhập sai trong 120 giây",
+    3000002: "Backend khóa IP vì đăng nhập sai nhiều lần",
+}
+
+RULE_DETAILS = {
+    1000001: ("Suricata · lưu lượng vào", "Phát hiện một IP tạo nhiều kết nối TCP mới tới máy B. Đây là dấu hiệu quét nhanh nhưng riêng nó có thể bị giả địa chỉ nguồn.", "nmap -sT -Pn -n --max-rate 20 -p 1-100 10.77.0.20"),
+    1000003: ("Suricata · lưu lượng trả về", "Đếm các gói RST/ACK do B trả về khi nhiều cổng đóng bị thăm dò. Kết hợp với SYN để nhận diện quét cổng.", "nmap -sT -Pn -n -p 1-100 10.77.0.20"),
+    1000005: ("Suricata · lưu lượng trả về", "Nhận diện quét cổng chậm bằng cách đếm RST/ACK trong cửa sổ dài hơn.", "nmap -sT -Pn -n --scan-delay 1500ms -p 1-40 10.77.0.20"),
+    1000002: ("Suricata · HTTP", "Báo khi người dùng dò các đường dẫn quản trị mồi; truy cập này không phải đăng nhập quản trị thật.", "curl -i http://10.77.0.20/admin"),
+    1000007: ("Suricata · HTTP response", "Cảnh báo khi đường dẫn admin mồi trả nội dung thay vì 403; thường xảy ra sau khi IP đã được chuyển vào honeypot.", "Mở lại http://10.77.0.20/admin sau khi IP đang bị đánh lừa"),
+    1000006: ("Suricata · HTTP URI", "Tìm chuỗi ../ chưa mã hóa, thường dùng để thử đọc file ngoài thư mục web.", "curl --path-as-is 'http://10.77.0.20/../../etc/passwd'"),
+    1000008: ("Suricata · HTTP URI", "Tìm path traversal đã mã hóa URL để tránh bộ lọc đơn giản.", "curl --path-as-is 'http://10.77.0.20/%2e%2e/%2e%2e/etc/passwd'"),
+    1000013: ("Suricata · HTTP URI", "Tìm các mẫu SQL injection trong đường dẫn hoặc query string.", "curl --path-as-is 'http://10.77.0.20/api/search?q=%27%20OR%201%3D1--'"),
+    1000015: ("Suricata · HTTP body", "Tìm mẫu SQL injection trong dữ liệu POST gửi lên ứng dụng.", "Gửi ' OR 1=1 -- vào form đăng nhập trong lab"),
+    1000014: ("Suricata · HTTP URI", "Tìm payload XSS trong đường dẫn hoặc query string.", "curl --path-as-is 'http://10.77.0.20/?q=%3Cscript%3Ealert(1)%3C/script%3E'"),
+    1000016: ("Suricata · HTTP body", "Tìm payload XSS trong dữ liệu POST gửi lên ứng dụng.", "Gửi <script>alert(1)</script> trong một trường form của lab"),
+    1000017: ("Suricata · HTTP response", "Đếm phản hồi 401 từ máy B về cùng một IP để nhận diện thử mật khẩu liên tục.", "Đăng nhập sai liên tiếp 5 lần trong 60 giây"),
+    2000001: ("Honeypot · TCP", "Ghi nhận kết nối thật tới các cổng dịch vụ mồi không phục vụ người dùng bình thường.", "nc -nv 10.77.0.20 3306"),
+    2000002: ("Honeypot · Web", "Ghi nhận IP đang bị đánh lừa mở trang quản trị giả.", "Mở /admin sau khi dashboard báo IP đang bị đánh lừa"),
+    2000003: ("Honeypot · Web", "Ghi nhận người dùng gửi tài khoản hoặc mật khẩu vào form quản trị giả.", "Nhập thử thông tin vào form admin giả"),
+    2000004: ("Honeypot · Honeytoken", "Báo động mức cao khi tài khoản bẫy bị sử dụng; tài khoản này không tồn tại trong DB thật.", "Dùng admin / LabShop@2026! tại trang admin giả"),
+    2000005: ("Honeypot · Honeytoken", "Báo động mức cao khi API key bẫy xuất hiện trong request.", "Dùng API key được lộ trên trang admin giả"),
+    2000006: ("Honeypot · Honeytoken", "Báo động mức cao khi người dùng tìm hoặc tải file sao lưu mồi.", "Truy cập một đường dẫn dưới /backup/ trên honeypot"),
+    3000001: ("Lab Shop API · xác thực", "Backend cộng một sự kiện khi cùng IP đăng nhập sai đủ 5 lần trong cửa sổ 120 giây.", "Nhập sai mật khẩu 5 lần trên /login.html"),
+    3000002: ("Lab Shop API · xác thực", "Backend báo IP đang bị khóa tạm thời vì vượt giới hạn đăng nhập sai.", "Thử đăng nhập lần nữa sau khi đã sai 5 lần"),
+}
+
+# True = co ket noi TCP/application that; False = goi stateless co the gia mao IP.
+TCP_EVIDENCE = {sid: sid not in (1000001, 1000003, 1000005) for sid in POLICY_DEFAULTS}
 
 
 def out(ok, msg, **kw):
@@ -49,6 +130,12 @@ def make_rule(kind, content, sid, anchor=False):
                 f'flow:established,to_server; http.uri; content:"{content}"; nocase; {"startswith; " if anchor else ""}'
                 f'classtype:web-application-attack; priority:2; '
                 f'metadata:generated_by lab-rulegen, kind uri; sid:{sid}; rev:1;)')
+    if kind == "host":
+        exact = re.escape(content)
+        return (f'alert http any any -> $HOME_NET any (msg:"LAB CUSTOM host {content}"; '
+                f'flow:established,to_server; http.host; pcre:"/^{exact}$/i"; '
+                f'classtype:web-application-attack; priority:2; '
+                f'metadata:generated_by operator, kind host; sid:{sid}; rev:1;)')
     return (f'alert http any any -> $HOME_NET any (msg:"LAB AUTO scanner user-agent {content}"; '
             f'flow:established,to_server; http.user_agent; content:"{content}"; nocase; '
             f'classtype:web-application-attack; priority:2; '
@@ -61,6 +148,16 @@ def valid(kind, content, sid):
     lo, hi = RANGES[kind]
     pat = URI_OK if kind == "uri" else UA_OK
     return lo <= sid <= hi and isinstance(content, str) and bool(pat.match(content))
+
+
+def valid_custom(kind, content):
+    if kind == "uri":
+        return isinstance(content, str) and bool(URI_OK.fullmatch(content))
+    if kind == "ua":
+        return isinstance(content, str) and bool(CUSTOM_UA_OK.fullmatch(content))
+    if kind == "host":
+        return isinstance(content, str) and bool(HOST_OK.fullmatch(content)) and ".." not in content
+    return False
 
 
 WEBROOT = "/var/www/lab"
@@ -98,6 +195,198 @@ def write_atomic(path, text, mode=0o644):
         os.fsync(dfd)
     finally:
         os.close(dfd)
+
+
+def load_policy_document():
+    try:
+        with open(POLICY_FILE, encoding="utf-8") as f:
+            policy = json.load(f)
+        return policy if isinstance(policy, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def load_policy():
+    rows = load_policy_document().get("rules", {})
+    return rows if isinstance(rows, dict) else {}
+
+
+def policy_threshold_values():
+    saved = load_policy_document().get("thresholds", {})
+    if not isinstance(saved, dict):
+        saved = {}
+    try:
+        incident = int(saved.get("incident", DEFAULT_THRESHOLDS["incident"]))
+        response = int(saved.get("response", DEFAULT_THRESHOLDS["response"]))
+    except (TypeError, ValueError):
+        return dict(DEFAULT_THRESHOLDS)
+    if not (1 <= incident < response <= 500):
+        return dict(DEFAULT_THRESHOLDS)
+    return {"incident": incident, "response": response}
+
+
+def save_policy(rows=None, thresholds=None):
+    current = load_policy_document()
+    data = {
+        "version": 2,
+        "rules": rows if rows is not None else (current.get("rules", {}) if isinstance(current.get("rules"), dict) else {}),
+        "thresholds": thresholds if thresholds is not None else policy_threshold_values(),
+    }
+    write_atomic(POLICY_FILE, json.dumps(data, ensure_ascii=False, indent=2))
+
+
+def policy_rows():
+    overrides = load_policy()
+    try:
+        base = open(LOCAL_RULES, encoding="utf-8").read()
+    except OSError:
+        base = ""
+    rows = []
+    for sid, default in POLICY_DEFAULTS.items():
+        source, description, example = RULE_DETAILS.get(sid, ("Hệ thống", "Sự kiện bảo mật được hệ thống ghi nhận.", "Không có lệnh kiểm thử mẫu"))
+        row = {"sid": sid, **default, "default_score": default["score"],
+               "default_count": default.get("count"), "default_seconds": default.get("seconds"),
+               "match": RULE_MATCHES.get(sid, "Theo sự kiện của hệ thống"), "tcp_evidence": TCP_EVIDENCE[sid],
+               "source": source, "description": description, "example": example,
+               "default_auto_response": True}
+        saved = overrides.get(str(sid), {})
+        if isinstance(saved, dict) and isinstance(saved.get("score"), int):
+            row["score"] = saved["score"]
+        row["auto_response"] = saved.get("auto_response", True) if isinstance(saved, dict) else True
+        line = next((x for x in base.splitlines() if f"sid:{sid};" in x), "")
+        match = re.search(r"threshold:type both,track by_(?:src|dst),count (\d+),seconds (\d+);", line)
+        if match:
+            row["count"], row["seconds"] = map(int, match.groups())
+        rows.append(row)
+    for rule in load_active().get("rules", []):
+        sid = rule.get("sid")
+        if not isinstance(sid, int) or not 6000000 <= sid <= 6749999:
+            continue
+        saved = overrides.get(str(sid), {})
+        score = saved.get("score", rule.get("score", 50)) if isinstance(saved, dict) else rule.get("score", 50)
+        kind = rule.get("kind")
+        content = rule.get("content")
+        custom_label = {"uri": "URI", "ua": "User-Agent", "host": "Domain/Host"}.get(kind, "mẫu")
+        custom_example = ({"uri": f"curl --path-as-is 'http://10.77.0.20{content}'",
+                           "ua": f"curl -A '{content}' http://10.77.0.20/",
+                           "host": f"curl -H 'Host: {content}' http://10.77.0.20/"}.get(kind, "Gửi request HTTP khớp mẫu"))
+        rows.append({"sid": sid, "name": rule.get("name") or rule.get("content", "Rule tùy chỉnh"),
+                     "category": "Tùy chỉnh", "score": int(score), "default_score": int(rule.get("score", 50)),
+                     "custom": True, "kind": kind, "content": content,
+                     "match": f"{({'uri': 'URI chứa', 'ua': 'User-Agent chứa', 'host': 'Domain/Host bằng'}.get(kind, 'Mẫu'))}: {content}",
+                     "source": "Suricata · rule do quản trị viên tạo",
+                     "description": f"Rule HTTP tùy chỉnh, tạo cảnh báo khi {custom_label} của request khớp giá trị đã nhập.",
+                     "example": custom_example,
+                     "tcp_evidence": True, "auto_response": saved.get("auto_response", True) if isinstance(saved, dict) else True,
+                     "default_auto_response": True})
+    return rows
+
+
+def policy_status():
+    out(True, "cấu hình rule đang áp dụng", rules=policy_rows(), thresholds=policy_threshold_values(),
+        updated_at=datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds"))
+
+
+def replace_threshold(text, sid, count, seconds):
+    lines = text.splitlines(keepends=True)
+    found = False
+    for index, line in enumerate(lines):
+        if f"sid:{sid};" not in line:
+            continue
+        pattern = r"threshold:type both,track by_(src|dst),count \d+,seconds \d+;"
+        if not re.search(pattern, line):
+            out(False, f"rule SID {sid} không có ngưỡng số lượng/thời gian")
+        lines[index] = re.sub(pattern, lambda m: f"threshold:type both,track by_{m.group(1)},count {count},seconds {seconds};", line)
+        found = True
+        break
+    if not found:
+        out(False, f"không tìm thấy SID {sid} trong local.rules")
+    return "".join(lines)
+
+
+def syntax_base_ok(text):
+    with tempfile.TemporaryDirectory(prefix="lab-policy-") as td:
+        candidate = os.path.join(td, "local.rules")
+        with open(candidate, "w", encoding="utf-8") as f:
+            f.write(text)
+        r = subprocess.run([SURICATA, "-T", "-c", YAML, "-S", candidate, "-l", td,
+                            "--set", "unix-command.enabled=no"], capture_output=True, text=True, timeout=120)
+        return r.returncode == 0, (r.stderr or r.stdout)[-500:]
+
+
+def policy_set(sid, score, count=None, seconds=None, auto_response=None):
+    custom = next((r for r in load_active().get("rules", []) if r.get("sid") == sid and 6000000 <= sid <= 6749999), None)
+    if (sid not in POLICY_DEFAULTS and custom is None) or not 0 <= score <= 500:
+        out(False, "SID hoặc điểm ngoài phạm vi cho phép")
+    default = POLICY_DEFAULTS[sid] if sid in POLICY_DEFAULTS else {"score": custom.get("score", 50)}
+    has_threshold = "count" in default
+    if has_threshold and (count is None or seconds is None or not 1 <= count <= 10000 or not 1 <= seconds <= 3600):
+        out(False, "ngưỡng phải có số lượng 1–10000 và thời gian 1–3600 giây")
+    if not has_threshold and (count is not None or seconds is not None):
+        out(False, "rule này không có ngưỡng đếm trong Suricata")
+    if auto_response is not None and not isinstance(auto_response, bool):
+        out(False, "tùy chọn tính vào phản ứng không hợp lệ")
+    old_rules = open(LOCAL_RULES, encoding="utf-8").read()
+    new_rules = replace_threshold(old_rules, sid, count, seconds) if has_threshold else old_rules
+    if new_rules != old_rules:
+        ok, detail = syntax_base_ok(new_rules)
+        if not ok:
+            out(False, "Suricata từ chối cấu hình mới; chưa áp dụng", detail=detail)
+        write_atomic(LOCAL_RULES, new_rules)
+        ok, detail = reload_and_verify()
+        if not ok:
+            write_atomic(LOCAL_RULES, old_rules)
+            sc("reload-rules")
+            out(False, "nạp rule thất bại; đã khôi phục cấu hình cũ", detail=detail)
+    rows = load_policy()
+    current = rows.get(str(sid), {}) if isinstance(rows.get(str(sid)), dict) else {}
+    rows[str(sid)] = {**current, "score": score,
+                      "auto_response": True if auto_response is None else auto_response,
+                      "updated_at": datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")}
+    save_policy(rows=rows)
+    out(True, f"đã áp dụng SID {sid}", rule=next(r for r in policy_rows() if r["sid"] == sid))
+
+
+def policy_thresholds(incident, response):
+    if not (1 <= incident < response <= 500):
+        out(False, "ngưỡng phải thỏa 1 ≤ tạo sự cố < phản ứng tự động ≤ 500")
+    values = {"incident": incident, "response": response}
+    save_policy(thresholds=values)
+    out(True, f"đã đặt ngưỡng sự cố {incident} và ngưỡng phản ứng {response}", thresholds=values)
+
+
+def mode_status():
+    values = {"MODE": "recommend", "RESPONSE": "deceive"}
+    try:
+        with open(ANALYZER_DEFAULT, encoding="utf-8") as f:
+            for line in f:
+                key, sep, value = line.strip().partition("=")
+                if sep and key in values and value:
+                    values[key] = value
+    except OSError:
+        pass
+    return values
+
+
+def mode_set(profile):
+    profiles = {
+        "recommend": ("recommend", "deceive", "chỉ đề xuất"),
+        "deceive": ("apply", "deceive", "tự đánh lừa"),
+        "block": ("apply", "block", "tự chặn web"),
+    }
+    if profile not in profiles:
+        out(False, "chế độ không hợp lệ")
+    mode, response, label = profiles[profile]
+    previous = mode_status()
+    write_atomic(ANALYZER_DEFAULT, f"MODE={mode}\nRESPONSE={response}\n")
+    restarted = subprocess.run([SYSTEMCTL, "restart", "lab-analyzer"], capture_output=True, text=True, timeout=30)
+    active = subprocess.run([SYSTEMCTL, "is-active", "lab-analyzer"], capture_output=True, text=True, timeout=10)
+    if restarted.returncode or active.stdout.strip() != "active":
+        write_atomic(ANALYZER_DEFAULT, f"MODE={previous['MODE']}\nRESPONSE={previous['RESPONSE']}\n")
+        subprocess.run([SYSTEMCTL, "restart", "lab-analyzer"], capture_output=True, text=True, timeout=30)
+        out(False, "restart analyzer thất bại; đã khôi phục chế độ cũ", detail=(restarted.stderr or active.stdout)[-300:])
+    out(True, f"đã chuyển sang {label}; điểm trong cửa sổ hiện tại đã được reset", mode=mode, response=response,
+        reset_scores=True)
 
 
 def render(rules):
@@ -138,7 +427,7 @@ def reload_and_verify():
     return True, st.get("message")
 
 
-def apply_rules(new_rules, action_msg, extra):
+def apply_rules(new_rules, action_msg, extra, policy_updates=None, policy_remove=None):
     old_text = open(AUTO_RULES, encoding="utf-8").read() if os.path.exists(AUTO_RULES) else ""
     text = render(new_rules)
     ok, detail = syntax_ok(text)
@@ -152,16 +441,92 @@ def apply_rules(new_rules, action_msg, extra):
         out(False, "nạp thất bại, đã khôi phục auto.rules cũ", detail=detail)
     os.makedirs(STATE_DIR, exist_ok=True)
     write_atomic(ACTIVE, json.dumps({"rules": new_rules}, ensure_ascii=False, indent=1))
+    if policy_updates or policy_remove:
+        rows = load_policy()
+        rows.update(policy_updates or {})
+        for sid in policy_remove or []:
+            rows.pop(str(sid), None)
+        save_policy(rows=rows)
     out(True, action_msg, ruleset=detail, active=len(new_rules), **extra)
+
+
+def custom_add(kind, content, score, name):
+    if not valid_custom(kind, content):
+        out(False, "mẫu không hợp lệ; URI phải bắt đầu bằng /; domain chỉ dùng chữ thường, số, dấu chấm và gạch ngang")
+    if not 0 <= score <= 500:
+        out(False, "điểm phải nằm trong khoảng 0–500")
+    name = name.strip()
+    if not 3 <= len(name) <= 64 or any(ord(char) < 32 for char in name):
+        out(False, "tên rule phải dài 3–64 ký tự và không chứa ký tự điều khiển")
+    if kind == "uri" and clashes_real_path(content):
+        out(False, f"'{content}' trùng đường dẫn thật của site ({clashes_real_path(content)}) - từ chối")
+    active = load_active().get("rules", [])
+    if len(active) >= MAX_ACTIVE:
+        out(False, "vượt số rule tùy chỉnh/tự sinh tối đa")
+    if any(r.get("kind") == kind and str(r.get("content", "")).lower() == content.lower() for r in active):
+        out(False, "mẫu này đã có rule đang chạy")
+    lo, hi = CUSTOM_RANGES[kind]
+    used = {r.get("sid") for r in active if isinstance(r.get("sid"), int)}
+    sid = next((candidate for candidate in range(lo, hi + 1) if candidate not in used), None)
+    if sid is None:
+        out(False, "đã hết dải SID dành cho rule tùy chỉnh")
+    now = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
+    rule = {"sid": sid, "kind": kind, "content": content, "name": name, "score": score,
+            "custom": True, "approved_at": now}
+    saved = {str(sid): {"score": score, "auto_response": True, "updated_at": now, "name": name}}
+    apply_rules(active + [rule], f"đã thêm và nạp rule tùy chỉnh {sid}",
+                {"sid": sid, "rule": make_rule(kind, content, sid)}, policy_updates=saved)
 
 
 def main():
     a = sys.argv[1:]
+    if a == ["mode", "status"]:
+        out(True, "chế độ analyzer đang áp dụng", **{k.lower(): v for k, v in mode_status().items()})
+    if len(a) == 3 and a[:2] == ["mode", "set"]:
+        mode_set(a[2])
+    if a == ["policy", "status"]:
+        policy_status()
+    if len(a) == 4 and a[:2] == ["policy", "thresholds"]:
+        try:
+            policy_thresholds(int(a[2]), int(a[3]))
+        except ValueError:
+            out(False, "ngưỡng phải là số nguyên")
+    if len(a) >= 4 and a[:2] == ["policy", "set"]:
+        try:
+            sid, score = int(a[2]), int(a[3])
+            rest = a[4:]
+            count = int(rest[0]) if len(rest) in (2, 3) else None
+            seconds = int(rest[1]) if len(rest) in (2, 3) else None
+            auto_text = rest[-1] if len(rest) in (1, 3) else None
+            if auto_text not in (None, "0", "1"):
+                raise ValueError("auto_response")
+            auto_response = None if auto_text is None else auto_text == "1"
+        except (ValueError, IndexError):
+            out(False, "usage: lab-rule policy set <sid> <score> [count seconds] [auto_response]")
+        if len(rest) not in (0, 1, 2, 3):
+            out(False, "usage: lab-rule policy set <sid> <score> [count seconds] [auto_response]")
+        policy_set(sid, score, count, seconds, auto_response)
+    if len(a) == 3 and a[:2] == ["policy", "reset"]:
+        try:
+            sid = int(a[2])
+            custom = next((r for r in load_active().get("rules", []) if r.get("sid") == sid and r.get("custom") is True), None)
+            default = POLICY_DEFAULTS.get(sid) or ({"score": custom.get("score", 50)} if custom else None)
+            if default is None:
+                raise KeyError(sid)
+        except (ValueError, KeyError):
+            out(False, "SID không hợp lệ")
+        policy_set(sid, default["score"], default.get("count"), default.get("seconds"), True)
+    if len(a) == 6 and a[:2] == ["custom", "add"]:
+        try:
+            score = int(a[4])
+        except ValueError:
+            out(False, "điểm phải là số nguyên")
+        custom_add(a[2], a[3], score, a[5])
     if a == ["status"]:
         print(json.dumps({"rc": 0, **load_active()}, ensure_ascii=False))
         return
     if len(a) != 2 or a[0] not in ("apply", "revoke"):
-        out(False, "usage: lab-rule apply <R5xxxxxx> | revoke <5xxxxxx> | status")
+        out(False, "usage: lab-rule apply/revoke/status | policy status/set/reset/thresholds | mode status/set | custom add")
     active = load_active().get("rules", [])
     now = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
 
@@ -195,12 +560,14 @@ def main():
         new = active + [{"sid": sid, "kind": kind, "content": content, "anchor": anchor, "proposal": pid, "approved_at": now}]
         apply_rules(new, f"đã nạp rule {sid}", {"sid": sid, "rule": make_rule(kind, content, sid, anchor)})
     else:
-        if not re.fullmatch(r"5\d{6}", a[1]):
+        if not re.fullmatch(r"[56]\d{6}", a[1]):
             out(False, "sid khong hop le")
         sid = int(a[1])
         if not any(r["sid"] == sid for r in active):
             out(False, "rule không đang chạy")
-        apply_rules([r for r in active if r["sid"] != sid], f"đã thu hồi rule {sid}", {"sid": sid})
+        custom = any(r.get("sid") == sid and r.get("custom") is True for r in active)
+        apply_rules([r for r in active if r["sid"] != sid], f"đã thu hồi rule {sid}", {"sid": sid},
+                    policy_remove=[sid] if custom else None)
 
 
 if __name__ == "__main__":

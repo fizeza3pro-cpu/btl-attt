@@ -73,8 +73,19 @@ manifest_response() {
   emit config/lab-response.service   /etc/systemd/system/lab-response.service root root 0644
 }
 manifest_soc() {
+  emit scripts/analyzer.py           /usr/local/lib/lab/analyzer.py     root root 0755
+  emit scripts/lab-rule              /usr/local/sbin/lab-rule           root root 0755
   emit scripts/lab-soc.py            /usr/local/lib/lab/lab-soc.py      root root 0755
+  emit scripts/lab_events.py         /usr/local/lib/lab/lab_events.py   root root 0755
+  emit scripts/soc_stream.py         /usr/local/lib/lab/soc_stream.py   root root 0644
+  emit scripts/lab-monitor.py        /usr/local/lib/lab/lab-monitor.py  root root 0755
+  emit config/lab-events.service     /etc/systemd/system/lab-events.service root root 0644
+  local f
+  for f in scripts/soc-assets/*; do
+    emit "$f" "/usr/local/lib/lab/soc-assets/$(basename "$f")" root root 0644
+  done
   emit scripts/lab-honeypot.py       /usr/local/lib/lab/lab-honeypot.py root root 0755
+  emit scripts/lab_decoy.py          /usr/local/lib/lab/lab_decoy.py    root root 0644
   emit config/lab-soc.service        /etc/systemd/system/lab-soc.service root root 0644
   emit config/lab-honeypot.service   /etc/systemd/system/lab-honeypot.service root root 0644
   emit config/nginx-honeypot.conf    "$NGINX_HP_DEST"                   root root 0644
@@ -83,6 +94,8 @@ manifest_web() {
   # Web app mới: FastAPI + SQLite trong /usr/local/lib/lab/webapp (chạy bằng venv)
   emit webapp/app.py                 /usr/local/lib/lab/webapp/app.py        root root 0755
   emit webapp/seed.py                /usr/local/lib/lab/webapp/seed.py       root root 0755
+  emit webapp/database.py            /usr/local/lib/lab/webapp/database.py   root root 0644
+  emit webapp/migrate.py             /usr/local/lib/lab/webapp/migrate.py    root root 0755
   emit webapp/db/schema.sql          /usr/local/lib/lab/webapp/db/schema.sql root root 0644
   emit webapp/requirements.txt       /usr/local/lib/lab/webapp/requirements.txt root root 0644
   emit config/lab-shop-api.service   /etc/systemd/system/lab-shop-api.service root root 0644
@@ -95,6 +108,10 @@ manifest_web() {
   for f in config/www/img/*; do
     [ -e "$f" ] || continue
     emit "$f" "$WWW_ROOT/img/$(basename "$f")" root root 0644
+  done
+  for f in config/www/staff/*; do
+    [ -e "$f" ] || continue
+    emit "$f" "$WWW_ROOT/staff/$(basename "$f")" root root 0644
   done
 }
 manifest_net() {
@@ -114,7 +131,7 @@ plan_services() {
   case "$1" in
     sensor)   DO_SURICATA=1; DO_DAEMONRELOAD=1; SERVICES="lab-rulegen lab-pcap-ring lab-nic-offload" ;;
     response) DO_NFT=1; DO_DAEMONRELOAD=1; SERVICES="lab-response lab-analyzer" ;;
-    soc)      DO_NGINX=1; DO_DAEMONRELOAD=1; SERVICES="lab-honeypot lab-soc" ;;
+    soc)      DO_NGINX=1; DO_DAEMONRELOAD=1; SERVICES="lab-analyzer lab-honeypot lab-events lab-soc" ;;
     web)      DO_NGINX=1; DO_DAEMONRELOAD=1; SERVICES="lab-shop-api" ;;
     net)      SERVICES="dnsmasq" ;;
     tools)    : ;;
@@ -183,7 +200,7 @@ done < "$MAN"
 
 # nginx: đảm bảo bật site (sites-available -> sites-enabled)
 if [ "$NGX" = 1 ]; then
-  for sa in "$NGINX_LAB_DEST" "$NGINX_HP_DEST"; do
+  for sa in /etc/nginx/sites-available/lab /etc/nginx/sites-available/lab-honeypot; do
     [ -f "$sa" ] && sudo ln -sf "$sa" "/etc/nginx/sites-enabled/$(basename "$sa")"
   done
 fi
@@ -236,7 +253,7 @@ echo "Xong trên $(hostname)."
 REMOTE
 )
 
-ENVVARS=(MANIFEST_NAME="$(basename "$MANIFEST")" NGINX_LAB_DEST="$NGINX_LAB_DEST" NGINX_HP_DEST="$NGINX_HP_DEST" SVCLIST="$SVCLIST" SURI="$SURI" NGX="$NGX" NFT="$NFT" DRL="$DRL" WEBAPP="$WEBAPP")
+ENVVARS=(MANIFEST_NAME="$(basename "$MANIFEST")" SVCLIST="$SVCLIST" SURI="$SURI" NGX="$NGX" NFT="$NFT" DRL="$DRL" WEBAPP="$WEBAPP")
 
 if [ "$LOCAL" = 1 ]; then
   # Chạy ngay trên máy này (dùng khi đang ở TRONG B): không SSH
@@ -246,6 +263,7 @@ if [ "$LOCAL" = 1 ]; then
 else
   # Đẩy qua SSH tới $HOST: B1 chuyển tarball thành FILE, B2 chạy installer
   cat "$TARBALL" | ssh "$HOST" 'cat > /tmp/lab-deploy.tgz'
-  ssh "$HOST" "${ENVVARS[*]} bash -s" <<<"$INSTALLER"
+  printf -v REMOTE_ENV ' %q' "${ENVVARS[@]}"
+  ssh "$HOST" "$REMOTE_ENV bash -s" <<<"$INSTALLER"
   echo; echo "✓ Đã đẩy mảng '$COMPONENT' lên $HOST."
 fi

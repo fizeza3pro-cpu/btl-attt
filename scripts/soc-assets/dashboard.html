@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="vi" style="color-scheme:light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#17324d">
+  <link rel="icon" href="data:,">
+  <title>Lab SOC · Bàn Điều Khiển</title>
+  <link rel="stylesheet" href="/assets/dashboard.css">
+  <script src="/assets/dashboard.js" defer></script>
+</head>
+<body data-token="__TOKEN__">
+  <a class="skip" href="#main">Bỏ qua điều hướng</a>
+  <header class="topbar">
+    <div class="identity"><span class="pulse" aria-hidden="true"></span><div><strong>Lab SOC</strong><span>Máy B · 10.77.0.20</span></div></div>
+    <div class="top-status">
+      <label class="mode-control"><span>Chế độ phản ứng</span><select id="mode-profile" aria-label="Chế độ phản ứng tự động"><option value="recommend">Chỉ đề xuất</option><option value="deceive">Tự đánh lừa</option><option value="block">Tự chặn web</option></select></label>
+      <button id="mode-apply" class="header-button">Áp dụng</button>
+      <span id="mode" class="badge">Đang đọc chế độ…</span><span id="connection" role="status">Đang kết nối…</span><time id="clock"></time>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Các khu vực của dashboard">
+    <button role="tab" data-view="overview" aria-controls="view-overview">Tổng quan</button>
+    <button role="tab" data-view="devices" aria-controls="view-devices">Thiết bị <span id="tab-devices" class="tab-count">0</span></button>
+    <button role="tab" data-view="logs" aria-controls="view-logs">Log trực tiếp</button>
+    <button role="tab" data-view="honey" aria-controls="view-honey">Honeyport &amp; honeypot <span id="tab-honey" class="tab-count">0</span></button>
+    <button role="tab" data-view="mitre" aria-controls="view-mitre">MITRE ATT&amp;CK</button>
+    <button role="tab" data-view="rules" aria-controls="view-rules">Quản lý rule <span id="tab-rules" class="tab-count">0</span></button>
+    <button role="tab" data-view="incidents" aria-controls="view-incidents">Sự cố</button>
+  </nav>
+
+  <main id="main">
+    <section id="view-overview" class="view" role="tabpanel" tabindex="0">
+      <div class="section-head"><div><h1>Tình trạng hiện tại</h1><p id="overview-policy-note">Điểm chỉ tồn tại trong cửa sổ 120 giây. Mỗi SID chỉ cộng một lần trong cửa sổ đó.</p></div><button class="button quiet" id="refresh">Làm mới dữ liệu</button></div>
+      <div class="kpis">
+        <article><span>Thiết bị hoạt động</span><strong id="k-devices">0</strong><small id="k-devices-note">30 phút gần nhất</small></article>
+        <article><span>Cảnh báo 1 giờ</span><strong id="k-alerts">0</strong><small id="k-incidents-note">0 sự cố</small></article>
+        <article><span>Đang phản ứng</span><strong id="k-responses">0</strong><small>Đánh lừa hoặc chặn</small></article>
+        <article><span>Chờ xử lý</span><strong id="k-pending">0</strong><small>Cần người vận hành</small></article>
+      </div>
+      <div class="overview-grid">
+        <article class="panel risk-board"><div class="panel-head"><div><h2>Điểm đang còn hiệu lực</h2><p>Cập nhật trực tiếp từ cửa sổ của analyzer</p></div></div><div id="risk-board" class="risk-list"></div></article>
+        <article class="panel"><div class="panel-head"><div><h2>Phản ứng đang chạy</h2><p>Thời hạn lấy từ firewall thật</p></div></div><div id="responses" class="response-list"></div></article>
+        <article class="panel wide"><div class="panel-head"><div><h2>Sức khỏe dịch vụ</h2><p>Trạng thái systemd trên máy B</p></div></div><div id="services" class="service-grid"></div></article>
+      </div>
+    </section>
+
+    <section id="view-devices" class="view" role="tabpanel" tabindex="0" hidden>
+      <div class="section-head"><div><h1>Thiết bị hoạt động</h1><p>Điểm, tín hiệu và bộ đếm đều ghi rõ khoảng thời gian.</p></div><label class="search">Tìm IP hoặc hoạt động<input id="device-search" name="device-search" autocomplete="off" placeholder="Ví dụ: 10.77.0.10…"></label></div>
+      <div class="panel table-wrap"><table><thead><tr><th>Thiết bị</th><th>Lần cuối</th><th>Web / 30 phút</th><th>Cảnh báo / 30 phút</th><th>Honeypot / 30 phút</th><th>Điểm hiện tại</th><th>Phản ứng</th><th></th></tr></thead><tbody id="device-rows"></tbody></table></div>
+    </section>
+
+    <section id="view-logs" class="view" role="tabpanel" tabindex="0" hidden>
+      <div class="section-head"><div><h1>Log trực tiếp</h1><p>Chỉ dòng tạo thêm điểm mới được đưa vào luồng điểm; cảnh báo Suricata lặp được giữ trong nguồn thô.</p></div></div>
+      <!-- LIVE_LOGS -->
+    </section>
+
+    <section id="view-honey" class="view" role="tabpanel" tabindex="0" hidden>
+      <div class="section-head"><div><h1>Honeyport &amp; honeypot</h1><p>Tách riêng mọi tương tác với cổng bẫy, web giả và honeytoken.</p></div></div>
+      <div class="admin-access">
+        <article class="panel admin-card real-admin"><h2>Admin thật</h2><p>Đăng nhập ở trang thường, sau đó mở khu vận hành. Dữ liệu lấy từ SQLite thật.</p><dl><div><dt>Email</dt><dd><code>admin@labshop.vn</code></dd></div><div><dt>Mật khẩu lab</dt><dd><code>S3cureAdm!n#2026</code></dd></div></dl><div class="admin-actions"><a class="button" href="http://10.77.0.20/login.html?next=/staff/" target="_blank" rel="noopener">Đăng nhập admin thật</a><a class="button quiet" href="http://10.77.0.20/staff/" target="_blank" rel="noopener">Mở /staff/</a></div></article>
+        <article class="panel admin-card fake-admin"><h2>Admin giả</h2><p><code>/admin</code> trả 403 với máy bình thường. Chỉ IP đang bị đánh lừa mới thấy trang đăng nhập giả.</p><dl><div><dt>Honeytoken</dt><dd><code>admin</code></dd></div><div><dt>Mật khẩu bẫy</dt><dd><code>LabShop@2026!</code></dd></div></dl><div class="admin-actions"><a class="button secondary" href="http://10.77.0.20/admin" target="_blank" rel="noopener">Thử mở /admin</a></div><small>Dùng honeytoken sẽ tạo SID 2000004 và cộng 100 điểm; đây không phải tài khoản trong DB thật.</small></article>
+      </div>
+      <div class="panel table-wrap"><table><thead><tr><th>Thời gian</th><th>IP</th><th>Hành vi</th><th>Điểm của rule</th><th>Điểm IP hiện tại</th><th>Chi tiết</th></tr></thead><tbody id="honey-rows"></tbody></table></div>
+    </section>
+
+    <section id="view-mitre" class="view" role="tabpanel" tabindex="0" hidden>
+      <div class="section-head"><div><h1>Bảng tra cứu MITRE ATT&amp;CK</h1><p>Mã kỹ thuật, chiến thuật, số lần quan sát và IP liên quan.</p></div></div>
+      <div class="mitre-explain panel"><strong>MITRE ATT&amp;CK không tự chặn máy.</strong><p>Đây là bộ từ điển chuẩn để gọi tên hành vi: ví dụ T1046 là dò dịch vụ mạng, T1110.001 là đoán mật khẩu. Analyzer gắn mã này vào sự cố để người vận hành biết kẻ tấn công đang ở bước nào và tra cứu thống nhất; quyết định phản ứng vẫn do điểm, ngưỡng và chế độ ở tab Rule.</p></div>
+      <div class="panel table-wrap"><table><thead><tr><th>Mã</th><th>Kỹ thuật</th><th>Chiến thuật</th><th>Đã quan sát</th><th>IP liên quan</th></tr></thead><tbody id="mitre-rows"></tbody></table></div>
+    </section>
+
+    <section id="view-rules" class="view" role="tabpanel" tabindex="0" hidden>
+      <div class="section-head"><div><h1>Quản lý rule</h1><p>Tra cứu chính xác hành vi nào cộng điểm và điểm nào được tính vào phản ứng.</p></div><label class="search">Tìm SID, đường dẫn hoặc hành vi<input id="rule-search" autocomplete="off" placeholder="Ví dụ: /admin, SQL, 1000002…"></label></div>
+      <div class="decision-flow" aria-label="Luồng quyết định phản ứng">
+        <div><b>1</b><span><strong>Suricata / honeypot</strong>Khớp điều kiện bên dưới</span></div>
+        <div><b>2</b><span><strong>Analyzer</strong>Mỗi SID cộng một lần trong 120 giây</span></div>
+        <div><b>3</b><span><strong>Ngưỡng</strong>Đủ điểm phản ứng và có TCP thật</span></div>
+        <div><b>4</b><span><strong>Chế độ header</strong>Đề xuất, đánh lừa hoặc chặn</span></div>
+      </div>
+      <p class="scope-note"><strong>Cách hệ thống quyết định:</strong> rule chỉ phát hiện và tạo SID. Analyzer cộng điểm của các SID còn hiệu lực trong 120 giây; đủ ngưỡng sự cố thì cảnh báo, đủ ngưỡng phản ứng và có bằng chứng TCP thật thì mới đánh lừa/chặn theo chế độ đang chọn. Muốn theo dõi riêng một domain, thêm rule loại <strong>Domain/Host</strong> ở dưới.</p>
+      <form id="threshold-form" class="decision-config panel">
+        <div><span class="eyebrow">Ngưỡng quyết định của analyzer</span><h2>Điểm chuyển trạng thái</h2><p>Ngưỡng phản ứng chỉ cộng các rule đang bật “Tính vào phản ứng” và vẫn bắt buộc có ít nhất một bằng chứng TCP thật.</p></div>
+        <label>Tạo sự cố từ<input id="incident-threshold" type="number" min="1" max="499" required><span>điểm</span></label>
+        <label>Đánh lừa / chặn từ<input id="response-threshold" type="number" min="2" max="500" required><span>điểm</span></label>
+        <button class="button" type="submit">Lưu ngưỡng</button>
+      </form>
+      <div class="panel table-wrap"><table class="policy-table"><thead><tr><th>Rule</th><th>Khớp chính xác khi</th><th>Số lượng</th><th>Thời gian</th><th>Điểm</th><th>Tính vào phản ứng</th><th>Bằng chứng</th><th>Áp dụng</th></tr></thead><tbody id="policy-rows"></tbody></table></div>
+      <div class="section-subhead"><div><h2>Thêm rule của bạn</h2><p>Rule được dựng từ khuôn an toàn, kiểm tra cú pháp rồi mới nạp vào Suricata.</p></div></div>
+      <form id="custom-rule-form" class="custom-rule panel">
+        <label>Tên rule<input id="custom-name" maxlength="64" required placeholder="Ví dụ: Công cụ quét nội bộ"></label>
+        <label>Trường cần khớp<select id="custom-kind"><option value="uri">Đường dẫn URI</option><option value="host">Domain / Host</option><option value="ua">User-Agent</option></select></label>
+        <label>Mẫu nhận diện<input id="custom-content" maxlength="64" required placeholder="/private-scan"></label>
+        <label>Điểm cộng<input id="custom-score" type="number" min="0" max="500" value="50" required></label>
+        <button class="button secondary" type="submit">Kiểm tra &amp; thêm rule</button>
+        <p id="custom-hint">URI phải bắt đầu bằng / và chỉ dùng chữ thường, số, dấu chấm, gạch ngang hoặc gạch chéo.</p>
+      </form>
+      <div class="section-subhead"><div><h2>Rule tự sinh</h2><p>Rule học từ hành vi đã được honeypot xác nhận.</p></div><button class="button secondary" data-rule-action="rulegen_run">Phân tích ngay</button></div>
+      <div class="two-col"><article class="panel"><h3>Chờ duyệt</h3><div id="generated-pending"></div></article><article class="panel"><h3>Đang chạy</h3><div id="generated-active"></div></article></div>
+    </section>
+
+    <section id="view-incidents" class="view" role="tabpanel" tabindex="0" hidden>
+      <div class="section-head"><div><h1>Sự cố &amp; quyết định</h1><p>Mỗi hàng mở được báo cáo bằng chứng đầy đủ.</p></div></div>
+      <div class="panel table-wrap"><table><thead><tr><th>Thời gian</th><th>IP</th><th>Điểm</th><th>Quyết định</th><th>MITRE</th><th></th></tr></thead><tbody id="incident-rows"></tbody></table></div>
+    </section>
+  </main>
+
+  <div id="drawer-shade" class="drawer-shade" hidden></div>
+  <aside id="device-drawer" class="drawer" aria-labelledby="drawer-title" hidden>
+    <div class="drawer-head"><div><span>Chi tiết thiết bị</span><h2 id="drawer-title">—</h2></div><button id="drawer-close" class="icon-button" aria-label="Đóng chi tiết">×</button></div>
+    <div id="drawer-body"></div>
+  </aside>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

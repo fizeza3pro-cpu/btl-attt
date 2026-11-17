@@ -1,7 +1,7 @@
 [Unit]
 Description=Lab SOC dashboard (chi mang quan tri 192.168.56.101:9000)
-After=network-online.target lab-analyzer.service
-Wants=network-online.target
+After=network-online.target lab-analyzer.service lab-events.service
+Wants=network-online.target lab-events.service
 
 [Service]
 Type=simple
@@ -14,6 +14,7 @@ RestartSec=3
 ProtectHome=yes
 ProtectSystem=full
 PrivateTmp=yes
+ReadWritePaths=/etc/suricata/rules /etc/default
 
 [Install]
 WantedBy=multi-user.target
